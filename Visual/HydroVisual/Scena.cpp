@@ -37,10 +37,10 @@ void Scena::init3D(HWND hWnd)
 
 void Scena::renderFrame()
 {
-	DWORD start = GetTickCount();	
+	DWORD start = GetTickCount();
 	for (int i = 0; i < iterations[currentIter].elementsNum; i++)
 	{
-		if(currentIter==0)
+		if(cubes[i].v_buffer == NULL)
 			cubes[i].InitObject(d3ddev,iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 255, 0);
 		else
 			cubes[i].UpdateColor(iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 255, 0);
