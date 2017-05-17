@@ -3,6 +3,7 @@
 
 #include "particle.h"
 #include <iostream>
+#include <cuda_runtime.h>
 
 #define cudaCheckErrors(msg) \
     do { \
