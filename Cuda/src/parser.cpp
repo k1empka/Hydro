@@ -44,7 +44,8 @@ void Parser::writeHeader()
 	{
 		out << Factors::X_SIZE << " " <<
 			   Factors::Y_SIZE << " " <<
-			   Factors::Z_SIZE << " " << std::endl;
+			   //Factors::Z_SIZE << " " <<
+			   Factors::ITERATION_NUM+1 << std::endl;
 	}
 	else
 	{

@@ -8,7 +8,7 @@ static int __constant__ D_RANGE  = CudaParams::RANGE_TH;
 
 void advectVelocity(Particle* data);
 void diffuse(Particle* data);
-void addForces();
+void addForces(Particle* data,int iter);
 void advectParticles(Particle* data);
 void updateVelocity(Particle* data);
 
@@ -31,10 +31,14 @@ void cudaKernelsConfig(dim3& grid,dim3& block)
     block.y = BLCK_Y;
     block.z = BLCK_Z;
 	grid.x = X_SIZE/BLCK_X;
-	grid.x = Y_SIZE/BLCK_Y;
-	grid.x = Z_SIZE/BLCK_Z;
+	grid.y = Y_SIZE/BLCK_Y;
+	grid.z = Z_SIZE/BLCK_Z;
 }
 
+__device__ int id3dpitch(int x,int y,int z)
+{
+	return ((z*(D_X_SIZE *D_Y_SIZE ))+(y* D_X_SIZE) + x);
+}
 
 /*  					Position advocation
  * Description:
@@ -44,23 +48,24 @@ void cudaKernelsConfig(dim3& grid,dim3& block)
  * Area is parted with 3d blocks
  */
 
-__device__ int id3dpitch(int x,int y,int z)
-{
-	return ((z*(D_X_SIZE *D_Y_SIZE ))+(y* D_X_SIZE) + x);
-}
-
 __global__ void advectParticles_kernel(Particle* data,float dt)
 {
 	  int idx = threadIdx.x + blockDim.x*blockIdx.x;
 	  int idy = threadIdx.y + blockDim.y*blockIdx.y;
 	  int idz = threadIdx.z + blockDim.z* blockIdx.z;
 
-	  int gId = idz * D_X_SIZE *  D_Y_SIZE + (idy* D_X_SIZE) + idx;
+	  int gId = id3dpitch(idx,idy,idz);
 
 	  if(gId < D_SIZE)
 	  {
 		  float4 pos = data->position[gId];
 		  float4 v   = data->velocity[gId];
+
+		  if(gId == D_SIZE - 1)
+		  {
+			  int debug = 0;
+			  pos.x += debug++;
+		  }
 
 		  pos.x += (dt * v.x);
 		  pos.y += (dt * v.y);
@@ -123,12 +128,33 @@ __global__ void diffuse_kernel(Particle* data)
 
 }
 
-void simulateFluids(Particle* data)
+__global__ void addForces_kernel(Particle* data,int spx,int spy,float fx,float fy,int rad)
+{
+	int idx = threadIdx.x + blockDim.x*blockIdx.x;
+	int idy = threadIdx.y + blockDim.y*blockIdx.y;
+	int idz = threadIdx.z + blockDim.z*blockIdx.z;
+
+	int gId = id3dpitch(idx + spx,idy + spy,idz);
+
+	if(gId < D_SIZE)
+	{
+		float4 v = data->velocity[gId];
+		idx -= rad;
+		idy -= rad;
+	    float s = 1.f / (1.f + idx*idx*idx*idx + idy*idy*idy*idy);
+		v.x += s*fx;
+		v.y += s*fy;
+		data->velocity[gId] = v;
+	}
+}
+
+void simulateFluids(Particle* data,int iter)
 {
 	advectVelocity(data);
-	diffuse(data);
+	//diffuse(data);
 	updateVelocity(data);
 	advectParticles(data);
+	//addForces(data,iter);
 }
 
 void advectVelocity(Particle* data)
@@ -144,12 +170,28 @@ void diffuse(Particle* data)
     dim3 block,grid;
     cudaKernelsConfig(grid,block);
 	diffuse_kernel<<<grid,block>>>(data);
-    cudaCheckErrors("advectParticles failed!");
+    cudaCheckErrors("advectDiffuse failed!");
 }
 
-void addForces()
+void addForces(Particle* data,int iter)
 {
+	using namespace Factors;
+	// For now only in 2D
+	int x = X_SIZE / (iter + 1);
+	int y = Y_SIZE / (iter + 1);
+	int ddx = 35;
+	int ddy = 35;
+    float fx = ddx / (float)X_SIZE;
+    float fy = ddy / (float)Y_SIZE;
+    int spy = x-FORCE_RADIUS;
+    int spx = y-FORCE_RADIUS;
+    fx *= FORCE * T;
+    fy *= FORCE * T;
 
+    dim3 tids(2*FORCE_RADIUS+1, 2*FORCE_RADIUS+1);
+
+    addForces_kernel<<<Z_SIZE,tids>>>(data,spx,spy,fx,fy,FORCE_RADIUS);
+    cudaCheckErrors("addForeces failed!");
 }
 void advectParticles(Particle* data)
 {

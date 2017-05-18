@@ -20,6 +20,9 @@ namespace Factors
 	const int	 Z_SIZE = 100;
 	const int 	 INIT_FLUID_W = 10;
 	const int    TOTAL_SIZE = X_SIZE * Y_SIZE * Z_SIZE;
+	const int	 FORCE  =  (5.8f*1000) ; // External force to make simulation interesting
+	const int    FORCE_RADIUS = 4;
+	const int 	 ITERATION_NUM = 100;
 }
 namespace CudaParams
 {
@@ -36,10 +39,12 @@ struct Particle
 	float4  velocity[Factors::TOTAL_SIZE];
 	float4  velocityTmp[Factors::TOTAL_SIZE]; // Temporary storage is needed, operations cannot be performed in place
 
+	float2  externalForce;
+
+
 	//TO DO
 	//float  density; // density
 	//float  pressure; // pressure
-	//float  externalForce[Factors::TOTAL_SIZE];
 };
 
 #endif /* CELL_H_ */

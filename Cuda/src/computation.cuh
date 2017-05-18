@@ -18,7 +18,7 @@
     } while(0);
 
 int  IDX_3D(int x,int y,int z);
-void simulateFluids(Particle* data);
+void simulateFluids(Particle* data,int iter);
 
 
 #endif

@@ -6,9 +6,6 @@
 #include "computation.cuh"
 #include "parser.h"
 
-#define ITERATION_NUM 1
-
-
 void initCuda()
 {
 	int nDevices;
@@ -51,12 +48,12 @@ Particle* initData()
 			for(int k = sz;k < ez; ++k)
 			{
 				int idx = IDX_3D(i,j,k);
-				data->position[idx].x = (sx+(rand() % ex));
-				data->position[idx].y = (sy+(rand() % ey));
-				data->position[idx].z = (sz+(rand() % ez));
-				data->velocity[idx].x = (X_SIZE/2 - (rand() % X_SIZE)) * 0.05f;
-				data->velocity[idx].y = (Y_SIZE/2 - (rand() % Y_SIZE)) * 0.05f;
-				data->velocity[idx].z = (Z_SIZE/2 - (rand() % Z_SIZE)) * 0.05f;
+				data->position[idx].x = ((rand() % INIT_FLUID_W ));
+				data->position[idx].y = ((rand() % INIT_FLUID_W ));
+				data->position[idx].z = ((rand() % INIT_FLUID_W ));
+				data->velocity[idx].x = float(0.5f + (rand() % X_SIZE)) * 0.05f;
+				data->velocity[idx].y = float(Y_SIZE/2 - (rand() % Y_SIZE)) * 0.01f;
+				//data->velocity[idx].z = (Z_SIZE/2 - (rand() % Z_SIZE)) * 0.05f;
 			}
 	return data;
 }
@@ -82,16 +79,18 @@ int main(int argc,char* argv[])
     cudaCheckErrors("cudaMemcpy to device failed");
 
     std::cout << "Simulation started!" << std::endl;
+    parser.writeIterToFile2D(h_data,0);
 
-    for(int i = 0; i < ITERATION_NUM; ++i)
+    for(int i = 0; i < Factors::ITERATION_NUM; ++i)
     {
-    	simulateFluids(d_data);
+    	simulateFluids(d_data,i);
         cudaCheckErrors("simulation fluid failed!");
         cudaMemcpy(h_data,d_data,totalSize, cudaMemcpyDeviceToHost);
         cudaCheckErrors("cudaMemcpy to host failed");
-        parser.writeIterToFile2D(h_data,i);
+        parser.writeIterToFile2D(h_data,i+1);
     }
     cudaFree(d_data);
+    delete h_data;
     std::cout << "Simulation succeed!" << std::endl;
 	return 0;
 }
