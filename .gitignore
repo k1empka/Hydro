@@ -265,3 +265,4 @@ __pycache__/
 /.metadata/
 #SIMULATION OUTPUT FILES
 /Cuda/results.txt
+/CUDAv2/.cproject
