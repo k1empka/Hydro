@@ -54,7 +54,7 @@ fraction* initSpace()
 		int x = (int)rand()%X_SIZE;
 		int y = (int)rand()%Y_SIZE;
 
-		space[y*Y_SIZE+x].U=(float)(rand()%MAX_START_FORCE+1);
+		space[y*X_SIZE+x].U=(float)(rand()%MAX_START_FORCE+1);
 	}
 
 	return space;
@@ -67,7 +67,7 @@ __global__ void step(fraction* space,fraction* result)
 
 	if(x<X_SIZE && y<Y_SIZE)
 	{
-		result[y*Y_SIZE+x].U=.7*space[y*Y_SIZE+x].U;
+		result[y*X_SIZE+x].U=.7*space[y*X_SIZE+x].U;
 
 		if( (y-1) > 0 )
 			result[y*X_SIZE+x].U+=.05* space[(y-1)*X_SIZE+x].U;
@@ -96,7 +96,7 @@ __global__ void copySpace(fraction* from,fraction* to)
 
 	if(x<X_SIZE && y<Y_SIZE)
 	{
-		to[y*Y_SIZE+x].U=from[y*Y_SIZE+x].U;
+		to[y*X_SIZE+x].U=from[y*X_SIZE+x].U;
 	}
 }
 
@@ -113,7 +113,7 @@ void printIteration(FILE* f,fraction* space, int iter)
 	for(int i=0; i<Y_SIZE;++i)
 		for(int j=0; j<X_SIZE;++j)
 		{
-			if(space[i*Y_SIZE+j].U) fprintf(f,"%d %d %f %f\n",j,i,space[i*Y_SIZE+j].U,space[i*Y_SIZE+j].U);
+			if(space[i*X_SIZE+j].U) fprintf(f,"%d %d %f %f\n",j,i,space[i*X_SIZE+j].U,space[i*X_SIZE+j].U);
 		}
 }
 
