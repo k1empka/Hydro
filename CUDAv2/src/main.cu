@@ -69,14 +69,22 @@ __global__ void step(fraction* space,fraction* result)
 	{
 		result[y*Y_SIZE+x].U=.7*space[y*Y_SIZE+x].U;
 
-		if( (y-1) > 0 ) result[y*Y_SIZE+x].U+=.05*space[(y-1)*Y_SIZE+x].U;
-		if( (y-2) > 0 ) result[y*Y_SIZE+x].U+=.025*space[(y-2)*Y_SIZE+x].U;
-		if( (y+1) < Y_SIZE ) result[y*Y_SIZE+x].U+=.05*space[(y+1)*Y_SIZE+x].U;
-		if( (y+2) < Y_SIZE ) result[y*Y_SIZE+x].U+=.025*space[(y+2)*Y_SIZE+x].U;
-		if( (x-1) > 0 ) result[y*Y_SIZE+x].U+=.05*space[(y)*Y_SIZE+x-1].U;
-		if( (x-2) > 0 ) result[y*Y_SIZE+x].U+=.025*space[(y)*Y_SIZE+x-2].U;
-		if( (x+1) < X_SIZE ) result[y*Y_SIZE+x].U+=.05*space[(y)*Y_SIZE+x+1].U;
-		if( (x+2) < X_SIZE ) result[y*Y_SIZE+x].U+=.025*space[y*Y_SIZE+x+2].U;
+		if( (y-1) > 0 )
+			result[y*X_SIZE+x].U+=.05* space[(y-1)*X_SIZE+x].U;
+		if( (y-2) > 0 )
+			result[y*X_SIZE+x].U+=.025*space[(y-2)*X_SIZE+x].U;
+		if( (y+1) < Y_SIZE )
+			result[y*X_SIZE+x].U+=.05* space[(y+1)*X_SIZE+x].U;
+		if( (y+2) < Y_SIZE )
+			result[y*X_SIZE+x].U+=.025*space[(y+2)*X_SIZE+x].U;
+		if( (x-1) > 0 )
+			result[y*X_SIZE+x].U+=.05* space[(y)*X_SIZE+x-1].U;
+		if( (x-2) > 0 )
+			result[y*X_SIZE+x].U+=.025*space[(y)*X_SIZE+x-2].U;
+		if( (x+1) < X_SIZE )
+			result[y*X_SIZE+x].U+=.05* space[(y)*X_SIZE+x+1].U;
+		if( (x+2) < X_SIZE )
+			result[y*X_SIZE+x].U+=.025*space[(y)*X_SIZE+x+2].U;
 
 	}
 }
