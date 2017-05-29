@@ -5,6 +5,7 @@
 #include "particle.h"
 #include "computation.cuh"
 #include "parser.h"
+#include "Timer.h"
 
 void initCuda()
 {
@@ -36,25 +37,22 @@ Particle* initData()
 		return start + INIT_FLUID_W * 2;
 	};
 
-	const int totalS = TOTAL_SIZE;
+	const int totalS = P_COUNT;
 	data = new Particle();
 	memset(data->position,0,sizeof(float4) * totalS);
 	memset(data->velocity,0,sizeof(float4) * totalS);
 
-	int sx = startPos(X_SIZE), sy = startPos(Y_SIZE), sz = startPos(Z_SIZE);
-	int ex = endPos(X_SIZE,sx), ey = endPos(Y_SIZE,sy), ez =endPos(Z_SIZE,sz);
-	for(int i = sx;i < ex; ++i)
-		for(int j = sy;j < ey; ++j)
-			for(int k = sz;k < ez; ++k)
-			{
-				int idx = IDX_3D(i,j,k);
-				data->position[idx].x = ((rand() % INIT_FLUID_W ));
-				data->position[idx].y = ((rand() % INIT_FLUID_W ));
-				data->position[idx].z = ((rand() % INIT_FLUID_W ));
-				data->velocity[idx].x = float(0.5f + (rand() % X_SIZE)) * 0.05f;
-				data->velocity[idx].y = float(Y_SIZE/2 - (rand() % Y_SIZE)) * 0.01f;
-				//data->velocity[idx].z = (Z_SIZE/2 - (rand() % Z_SIZE)) * 0.05f;
-			}
+	for(int i = 0;i < totalS; ++i)
+	{
+		float4 pos;
+		pos.x = ((rand() % INIT_FLUID_W ));
+		pos.y = ((rand() % INIT_FLUID_W ));
+		pos.z = ((rand() % INIT_FLUID_W ));
+		data->position[i] = pos;
+		data->velocity[i].x = float(X_SIZE / 2. - rand() % X_SIZE) * 0.05f;
+		data->velocity[i].y = float(Y_SIZE / 2. - rand() % Y_SIZE) * 0.01f;
+		data->velocity[i].z = float(Z_SIZE / 2. - rand() % Z_SIZE) * 0.01f;
+	}
 	return data;
 }
 
@@ -83,14 +81,18 @@ int main(int argc,char* argv[])
 
     for(int i = 0; i < Factors::ITERATION_NUM; ++i)
     {
+        Timer::getInstance().start("Simulation Time");
     	simulateFluids(d_data,i);
         cudaCheckErrors("simulation fluid failed!");
         cudaMemcpy(h_data,d_data,totalSize, cudaMemcpyDeviceToHost);
         cudaCheckErrors("cudaMemcpy to host failed");
-        parser.writeIterToFile2D(h_data,i+1);
+        Timer::getInstance().stop("Simulation Time");
+        //parser.writeIterToFile2D(h_data,i+1);
     }
+
     cudaFree(d_data);
     delete h_data;
     std::cout << "Simulation succeed!" << std::endl;
+    Timer::getInstance().printResults();
 	return 0;
 }

@@ -57,7 +57,7 @@ void Parser::writeHeader()
 void Parser::writeIterToFile3D(Particle* data,int iter)
 {
 	out << "ITER_" << iter << std::endl;
-	for(int i = 0; i < Factors::TOTAL_SIZE; ++i)
+	for(int i = 0; i < Factors::P_COUNT; ++i)
 	{
 		float4 pos = data->position[i];
 		float4 v   = data->velocity[i];
@@ -72,7 +72,7 @@ void Parser::writeIterToFile3D(Particle* data,int iter)
 void Parser::writeIterToFile2D(Particle* data,int iter)
 {
 	out << "ITER_" << iter << std::endl;
-	for(int i = 0; i < Factors::TOTAL_SIZE; ++i)
+	for(int i = 0; i < Factors::P_COUNT; ++i)
 	{
 		float4 pos = data->position[i];
 		float4 v   = data->velocity[i];

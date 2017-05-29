@@ -20,29 +20,32 @@ namespace Factors
 	const int	 Z_SIZE = 100;
 	const int 	 INIT_FLUID_W = 10;
 	const int    TOTAL_SIZE = X_SIZE * Y_SIZE * Z_SIZE;
+	const int	 P_COUNT = 1000000; // Number of particles
 	const int	 FORCE  =  (5.8f*1000) ; // External force to make simulation interesting
 	const int    FORCE_RADIUS = 4;
 	const int 	 ITERATION_NUM = 100;
+	const float  GRAVITY = 9.80665;
+	const float  MASS_P = 20;
 }
+
 namespace CudaParams
 {
-	const int BLCK_X = 8;
-	const int BLCK_Y = 8;
-	const int BLCK_Z = 8;
+	const int BLOCK_SIZE = 128;
 	const int RANGE_TH = 16; //Range of calculation for one thread in kernel
+	const int P_NUM_PER_BUCKET = 20;
 }
 
 
 struct Particle
 {
-	float4  position[Factors::TOTAL_SIZE]; //float4 to have equal bytes, increase performance
-	float4  velocity[Factors::TOTAL_SIZE];
-	float4  velocityTmp[Factors::TOTAL_SIZE]; // Temporary storage is needed, operations cannot be performed in place
-
-	float2  externalForce;
-
+	float4  position[Factors::P_COUNT]; //float4 to have equal bytes, increase performance
+	float4  velocity[Factors::P_COUNT];
+	float4  velocityTmp[Factors::P_COUNT]; // Temporary storage is needed, operations cannot be performed in place
+	float4	externalForces[Factors::P_COUNT];
+	int     index[Factors::TOTAL_SIZE]; // map to grid
 
 	//TO DO
+	//float2  externalForce;
 	//float  density; // density
 	//float  pressure; // pressure
 };
