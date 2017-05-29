@@ -3,19 +3,7 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#define NUM_OF_ITERATIONS 100
-#define X_SIZE 100
-#define Y_SIZE 100
-#define NUM_OF_START_FRACTIONS 100
-#define MAX_START_FORCE 100
-#define IDX_2D(x,y) (y * X_SIZE + x)
-
-struct fraction
-{
-	float U;
-	//TODO more paramas
-};
+#include "computation.cuh"
 
 void initCuda()
 {
@@ -34,7 +22,7 @@ void initCuda()
 
 fraction* initSpace()
 {
-	fraction* space = (fraction*)malloc(X_SIZE*Y_SIZE*sizeof(fraction));
+	fraction* space = (fraction*)malloc(sizeof(fraction));
 
 	if(NULL==space)
 	{
@@ -42,10 +30,12 @@ fraction* initSpace()
 		return NULL;
 	}
 
-	for(int i=0; i<Y_SIZE; ++i)
-		for(int j=0; j<X_SIZE;++j)
+	for(int y=0; y<Y_SIZE; ++y)
+		for(int x=0; x<X_SIZE;++x)
 		{
-			space[i*Y_SIZE+j].U=0;
+			space->Vx[IDX_2D(x,y)]=0.;
+			space->Vy[IDX_2D(x,y)]=0.;
+			space->U[IDX_2D(x,y)]=0.;
 		}
 
 	srand (time(NULL));
@@ -55,51 +45,13 @@ fraction* initSpace()
 		int x = (int)rand()%X_SIZE;
 		int y = (int)rand()%Y_SIZE;
 
-		space[y*X_SIZE+x].U=(float)(rand()%MAX_START_FORCE+1);
+		space->U[y*X_SIZE+x]=(float)(rand()%MAX_START_FORCE + 1);
 	}
 
 	return space;
 }
 
-__global__ void step(fraction* space,fraction* result)
-{
-	int x = blockIdx.x * blockDim.x + threadIdx.x;
-	int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-	if(x<X_SIZE && y<Y_SIZE)
-	{
-		result[y*X_SIZE+x].U=.7*space[y*X_SIZE+x].U;
-
-		if( (y-1) > 0 )
-			result[y*X_SIZE+x].U+=.05* space[(y-1)*X_SIZE+x].U;
-		if( (y-2) > 0 )
-			result[y*X_SIZE+x].U+=.025*space[(y-2)*X_SIZE+x].U;
-		if( (y+1) < Y_SIZE )
-			result[y*X_SIZE+x].U+=.05* space[(y+1)*X_SIZE+x].U;
-		if( (y+2) < Y_SIZE )
-			result[y*X_SIZE+x].U+=.025*space[(y+2)*X_SIZE+x].U;
-		if( (x-1) > 0 )
-			result[y*X_SIZE+x].U+=.05* space[(y)*X_SIZE+x-1].U;
-		if( (x-2) > 0 )
-			result[y*X_SIZE+x].U+=.025*space[(y)*X_SIZE+x-2].U;
-		if( (x+1) < X_SIZE )
-			result[y*X_SIZE+x].U+=.05* space[(y)*X_SIZE+x+1].U;
-		if( (x+2) < X_SIZE )
-			result[y*X_SIZE+x].U+=.025*space[(y)*X_SIZE+x+2].U;
-
-	}
-}
-
-__global__ void copySpace(fraction* from,fraction* to)
-{
-	int x = blockIdx.x * blockDim.x + threadIdx.x;
-	int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-	if(x<X_SIZE && y<Y_SIZE)
-	{
-		to[y*X_SIZE+x].U=from[y*X_SIZE+x].U;
-	}
-}
 
 
 void printHeader(FILE* f)
@@ -111,10 +63,11 @@ void printIteration(FILE* f,fraction* space, int iter)
 {
 	fprintf(f,"ITER_%d\n",iter);
 
-	for(int i=0; i<Y_SIZE;++i)
-		for(int j=0; j<X_SIZE;++j)
+	for(int y=0; y<Y_SIZE;++y)
+		for(int x=0; x<X_SIZE;++x)
 		{
-			if(space[i*X_SIZE+j].U) fprintf(f,"%d %d %f %f\n",j,i,space[i*X_SIZE+j].U,space[i*X_SIZE+j].U);
+			if(space->U[y*X_SIZE+x] != 0)
+				fprintf(f,"%d %d %f %f\n",x,y,space->U[y*X_SIZE+x],space->U[y*X_SIZE+x]);
 		}
 }
 
@@ -136,14 +89,12 @@ int main()
 	initCuda();
 
 	fraction* space = initSpace();
-	if(NULL==space) return -1;
 
-	int N = X_SIZE * Y_SIZE;
-	dim3 threadsPerBlock(16, 16);
-	dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
+	if(NULL==space)
+		return -1;
 
 	fraction *d_space,*d_result;
-	int totalSize=X_SIZE*Y_SIZE*sizeof(fraction);
+	int totalSize=sizeof(fraction);
 	cudaMalloc((void **)&d_space,totalSize);
 	cudaMalloc((void **)&d_result,totalSize);
 	cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
@@ -155,12 +106,11 @@ int main()
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
-		copySpace<<<numBlocks, threadsPerBlock>>>(d_result,d_space);
+		simulation(d_space,d_result);
 		cudaMemcpy(space,d_space,totalSize, cudaMemcpyDeviceToHost);
 		printIteration(f,space,i);
 	}
-	printf("Simulation complted\n");
+	printf("Simulation completed\n");
 
 	cudaFree(d_space);
 	cudaFree(d_result);
