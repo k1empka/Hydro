@@ -9,6 +9,7 @@
 #define Y_SIZE 100
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 100
+#define IDX_2D(x,y) (y * X_SIZE + x)
 
 struct fraction
 {
