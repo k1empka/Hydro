@@ -51,9 +51,6 @@ fraction* initSpace()
 	return space;
 }
 
-
-
-
 void printHeader(FILE* f)
 {
 	fprintf(f,"%d %d %d\n",X_SIZE,Y_SIZE,NUM_OF_ITERATIONS);
