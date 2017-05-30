@@ -80,47 +80,47 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 		float* space  = spaceData->U;
 		int thx = threadIdx.x, thy = threadIdx.y;
 
-		shSpace[THX_2D(thx + nCount,thy + nCount)] = space[IDX_2D(x,y)];
+		thx += nCount;
+		thy += nCount;
+
+		shSpace[THX_2D(thx,thy)] = space[IDX_2D(x,y)];
 
 		if(thx == 0 && x > 1)
 		{
-			shSpace[THX_2D(thx,thy + nCount)]    = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx- nCount,thy)]    = space[IDX_2D(x-nCount,y)];
 		}
 		if(thx == 1 && x > 2)
 		{
-			shSpace[THX_2D(thx,thy + nCount)]    = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx- nCount,thy)]    = space[IDX_2D(x-nCount,y)];
 		}
 		if(thx == blockDim.x - nCount && x < X_SIZE - 2)
 		{
-			shSpace[THX_2D(thx + 4,thy+ nCount)] = space[IDX_2D(x+nCount,y)];
+			shSpace[THX_2D(thx + nCount,thy)] = space[IDX_2D(x+nCount,y)];
 		}
 		if(thx == blockDim.x - 1 && x < X_SIZE - 1)
 		{
-			shSpace[THX_2D(thx + 4,thy+ nCount)] = space[IDX_2D(x+nCount,y)];
+			shSpace[THX_2D(thx + nCount,thy)] = space[IDX_2D(x+nCount,y)];
 		}
 		if(thy == 0 && y > 1)
 		{
-			shSpace[THX_2D(thx + nCount,thy)]    = space[IDX_2D(x,y-nCount)];
+			shSpace[THX_2D(thx,thy - nCount)]    = space[IDX_2D(x,y-nCount)];
 		}
 		if(thy == 1 && y > 2)
 		{
-			shSpace[THX_2D(thx + nCount,thy)]    = space[IDX_2D(x,y-nCount)];
+			shSpace[THX_2D(thx,thy - nCount)]    = space[IDX_2D(x,y-nCount)];
 		}
 		if(thy == blockDim.y - nCount && y < Y_SIZE - 2)
 		{
-			shSpace[THX_2D(thx + nCount,thy+ 4)] = space[IDX_2D(x,y+nCount)];
+			shSpace[THX_2D(thx,thy + nCount)] = space[IDX_2D(x,y+nCount)];
 		}
 		if(thy == blockDim.y - 1 && y < Y_SIZE - 1)
 		{
-			shSpace[THX_2D(thx + nCount,thy+ 4)] = space[IDX_2D(x,y+nCount)];
+			shSpace[THX_2D(thx,thy + nCount)] = space[IDX_2D(x,y+nCount)];
 		}
 
 		__syncthreads(); // wait for threads to fill whole shared memory
 
-		result[IDX_2D(x,y)] = 0.7 * shSpace[THX_2D(thx+ nCount,thy+ nCount)];
-
-		thx += nCount;
-		thy += nCount;
+		result[IDX_2D(x,y)] = 0.7 * shSpace[THX_2D(thx,thy)];
 
 		if( (y-1) > 0)
 			result[IDX_2D(x,y)] += 0.05 * shSpace[THX_2D(thx,thy-1)];
