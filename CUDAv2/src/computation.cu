@@ -46,8 +46,10 @@ __global__ void advect(fraction* spaceData,fraction* resultData, float dt)
 
 		resultData->Vx[id] = bilinterp(spaceData->Vx,newX,newY,X_SIZE,Y_SIZE);
 		resultData->Vy[id] = bilinterp(spaceData->Vy,newX,newY,X_SIZE,Y_SIZE);
+		resultData->U[id]  = bilinterp(spaceData->U, newX,newY,X_SIZE,Y_SIZE);
 	}
 }
+
 
 /*				Shared memory model
  * 				 ________________
@@ -87,11 +89,11 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 
 		if(thx == 0 && x > 1)
 		{
-			shSpace[THX_2D(thx- nCount,thy)]    = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx - nCount,thy)] = space[IDX_2D(x-nCount,y)];
 		}
 		if(thx == 1 && x > 2)
 		{
-			shSpace[THX_2D(thx- nCount,thy)]    = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx - nCount,thy)] = space[IDX_2D(x-nCount,y)];
 		}
 		if(thx == blockDim.x - nCount && x < X_SIZE - 2)
 		{
@@ -103,11 +105,11 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 		}
 		if(thy == 0 && y > 1)
 		{
-			shSpace[THX_2D(thx,thy - nCount)]    = space[IDX_2D(x,y-nCount)];
+			shSpace[THX_2D(thx,thy - nCount)] = space[IDX_2D(x,y-nCount)];
 		}
 		if(thy == 1 && y > 2)
 		{
-			shSpace[THX_2D(thx,thy - nCount)]    = space[IDX_2D(x,y-nCount)];
+			shSpace[THX_2D(thx,thy - nCount)] = space[IDX_2D(x,y-nCount)];
 		}
 		if(thy == blockDim.y - nCount && y < Y_SIZE - 2)
 		{
@@ -120,24 +122,26 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 
 		__syncthreads(); // wait for threads to fill whole shared memory
 
-		result[IDX_2D(x,y)] = 0.7 * shSpace[THX_2D(thx,thy)];
+		int idx = IDX_2D(x,y);
+
+		result[idx] = 0.7 * shSpace[THX_2D(thx,thy)];
 
 		if( (y-1) > 0)
-			result[IDX_2D(x,y)] += 0.05 * shSpace[THX_2D(thx,thy-1)];
+			result[idx] += 0.05 * shSpace[THX_2D(thx,thy-1)];
 		if( (y-2) > 0 )
-			result[IDX_2D(x,y)] += 0.025* shSpace[THX_2D(thx,thy-2)];
+			result[idx] += 0.025* shSpace[THX_2D(thx,thy-2)];
 		if( (y+1) < Y_SIZE )
-			result[IDX_2D(x,y)] += 0.05 * shSpace[THX_2D(thx,thy+1)];
+			result[idx] += 0.05 * shSpace[THX_2D(thx,thy+1)];
 		if( (y+2) < Y_SIZE )
-			result[IDX_2D(x,y)] += 0.025* shSpace[THX_2D(thx,thy+2)];
+			result[idx] += 0.025* shSpace[THX_2D(thx,thy+2)];
 		if( (x-1) > 0 )
-			result[IDX_2D(x,y)] += 0.05 * shSpace[THX_2D(thx-1,thy)];
+			result[idx] += 0.05 * shSpace[THX_2D(thx-1,thy)];
 		if( (x-2) > 0 )
-			result[IDX_2D(x,y)] += 0.025* shSpace[THX_2D(thx-2,thy)];
+			result[idx] += 0.025* shSpace[THX_2D(thx-2,thy)];
 		if( (x+1) < X_SIZE )
-			result[IDX_2D(x,y)] += 0.05 * shSpace[THX_2D(thx+1,thy)];
+			result[idx] += 0.05 * shSpace[THX_2D(thx+1,thy)];
 		if( (x+2) < X_SIZE )
-			result[IDX_2D(x,y)] += 0.025* shSpace[THX_2D(thx+2,thy)];
+			result[idx] += 0.025* shSpace[THX_2D(thx+2,thy)];
 	}
 }
 
@@ -150,36 +154,26 @@ __global__ void step(fraction* spaceData,fraction* resultData)
 	{
 		float* result = resultData->U;
 		float* space  = spaceData->U;
+		int idx = IDX_2D(x,y);
 
-		result[y*X_SIZE+x]=.7*space[y*X_SIZE+x];
+		result[idx] = 0.7*space[idx];
 
 		if( (y-1) > 0 )
-			result[IDX_2D(x,y)] +=.05 *space[(y-1)*X_SIZE+x];
+			result[idx] +=.05 *space[(y-1)*X_SIZE+x];
 		if( (y-2) > 0 )
-			result[IDX_2D(x,y)] +=.025*space[(y-2)*X_SIZE+x];
+			result[idx] +=.025*space[(y-2)*X_SIZE+x];
 		if( (y+1) < Y_SIZE )
-			result[IDX_2D(x,y)] +=.05 *space[(y+1)*X_SIZE+x];
+			result[idx] +=.05 *space[(y+1)*X_SIZE+x];
 		if( (y+2) < Y_SIZE )
-			result[IDX_2D(x,y)] +=.025*space[(y+2)*X_SIZE+x];
+			result[idx] +=.025*space[(y+2)*X_SIZE+x];
 		if( (x-1) > 0 )
-			result[IDX_2D(x,y)] +=.05 *space[(y)*X_SIZE+x-1];
+			result[idx] +=.05 *space[(y)*X_SIZE+x-1];
 		if( (x-2) > 0 )
-			result[IDX_2D(x,y)] +=.025*space[(y)*X_SIZE+x-2];
+			result[idx] +=.025*space[(y)*X_SIZE+x-2];
 		if( (x+1) < X_SIZE )
-			result[IDX_2D(x,y)] +=.05 *space[(y)*X_SIZE+x+1];
+			result[idx] +=.05 *space[(y)*X_SIZE+x+1];
 		if( (x+2) < X_SIZE )
-			result[IDX_2D(x,y)] +=.025*space[(y)*X_SIZE+x+2];
-	}
-}
-
-__global__ void copySpace(fraction* from,fraction* to)
-{
-	int x = blockIdx.x * blockDim.x + threadIdx.x;
-	int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-	if(x<X_SIZE && y<Y_SIZE)
-	{
-		to->U[y*X_SIZE+x]=from->U[y*X_SIZE+x];
+			result[idx] +=.025*space[(y)*X_SIZE+x+2];
 	}
 }
 
@@ -194,7 +188,7 @@ void simulation(fraction* d_space,fraction* d_result)
 		(threadsPerBlock.y + 2); // each thread - each cell);
 				// + boundaries threads need neighbours from other block
 
-	stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_space,d_result);
-	//step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
-	copySpace<<<numBlocks, threadsPerBlock>>>(d_result,d_space);
+	advect<<<numBlocks,threadsPerBlock>>>(d_space,d_result,DT);
+	//step<<<numBlocks, threadsPerBlock>>>(d_result,d_space);
+	stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_result,d_space);
 }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "computation.cuh"
+#include "Timer.h"
 
 void initCuda()
 {
@@ -99,16 +100,17 @@ int main()
 	FILE* f = initOutputFile();
 
 	printHeader(f);
-
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
+		Timer::getInstance().start("Simulation time");
 		simulation(d_space,d_result);
 		cudaMemcpy(space,d_space,totalSize, cudaMemcpyDeviceToHost);
+		Timer::getInstance().stop("Simulation time");
 		printIteration(f,space,i);
 	}
 	printf("Simulation completed\n");
-
+	Timer::getInstance().printResults();
 	cudaFree(d_space);
 	cudaFree(d_result);
 	free(space);
