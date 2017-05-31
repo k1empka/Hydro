@@ -5,7 +5,6 @@
 #define Y_SIZE 100
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 100
-#define IDX_2D(x,y) ((y) * X_SIZE + x)
 #define DT 0.5
 #define uV 0.02 // viscosity
 #define H  1 // radius for SPH
@@ -14,6 +13,8 @@
 #define TH_IN_BLCK_X 16
 #define TH_IN_BLCK_Y 16
 #define THX_2D(x,y) ((y) * TH_IN_BLCK_X + x)
+#define IDX_2D(x,y) ((y) * X_SIZE + x)
+
 /*
  *
  * SPH - smoothing particle hydrodynamics

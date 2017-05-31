@@ -43,10 +43,12 @@ fraction* initSpace()
 
 	for(int i=0; i<NUM_OF_START_FRACTIONS; ++i)
 	{
-		int x = (int)rand()%X_SIZE;
-		int y = (int)rand()%Y_SIZE;
-
-		space->U[y*X_SIZE+x]=(float)(rand()%MAX_START_FORCE + 1);
+		int x = 40 + rand()%20;
+		int y = 40 + rand()%20;
+		int idx = IDX_2D(x,y);
+		space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
+		space->Vx[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
+		space->Vy[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
 	}
 
 	return space;
@@ -64,7 +66,7 @@ void printIteration(FILE* f,fraction* space, int iter)
 	for(int y=0; y<Y_SIZE;++y)
 		for(int x=0; x<X_SIZE;++x)
 		{
-			if(space->U[y*X_SIZE+x] != 0)
+			if(space->U[y*X_SIZE+x] > 0.001f)
 				fprintf(f,"%d %d %f %f\n",x,y,space->U[y*X_SIZE+x],space->U[y*X_SIZE+x]);
 		}
 }
@@ -72,7 +74,7 @@ void printIteration(FILE* f,fraction* space, int iter)
 FILE* initOutputFile()
 {
 	char filename[100];
-	sprintf(filename,"%luresult",(unsigned long)time(NULL));
+	sprintf(filename,"result");
 	FILE *f = fopen(filename, "w");
 	if (f == NULL)
 	{
@@ -103,9 +105,19 @@ int main()
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
+		bool isEven = (i % 2) == 0;
+		fraction* tmp;
 		Timer::getInstance().start("Simulation time");
+
+		if(!isEven)
+		{
+			tmp = d_space;
+			d_space = d_result;
+			d_result = tmp;
+		}
+
 		simulation(d_space,d_result);
-		cudaMemcpy(space,d_space,totalSize, cudaMemcpyDeviceToHost);
+		cudaMemcpy(space,d_result,totalSize, cudaMemcpyDeviceToHost);
 		Timer::getInstance().stop("Simulation time");
 		printIteration(f,space,i);
 	}

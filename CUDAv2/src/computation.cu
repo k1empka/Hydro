@@ -54,14 +54,14 @@ __global__ void advect(fraction* spaceData,fraction* resultData, float dt)
 /*				Shared memory model
  * 				 ________________
  * 				|t1				|
- * 			____|t2_____________|___
- * 		  |t1|t2|t1|t2|			|	|
- * 		  |	    |t2				|	|
- * 		  |  	|				|	|
- * 		  | 	|				|	|
- * 		  |  	|				|	|
- * 		  |  	|				|	|
- * 		  |_____|_______________|___|
+ * 			____|t2_____________|_____
+ * 		  |t1|t2|t1|t2|			|     |
+ * 		  |	    |t2				|	  |
+ * 		  |  	|				|	  |
+ * 		  | 	|				|	  |
+ * 		  |  	|				|	  |
+ * 		  |  	|				|	  |
+ * 		  |_____|_______________|_____|
  * 				|				|
  * 				|_______________|
  *
@@ -85,6 +85,9 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 		thx += nCount;
 		thy += nCount;
 
+		shSpace[THX_2D(thx-2,thy-2)] = 0;
+		shSpace[THX_2D(thx+2,thy+2)] = 0;
+		__syncthreads();
 		shSpace[THX_2D(thx,thy)] = space[IDX_2D(x,y)];
 
 		if(thx == 0 && x > 1)
@@ -124,24 +127,15 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 
 		int idx = IDX_2D(x,y);
 
-		result[idx] = 0.7 * shSpace[THX_2D(thx,thy)];
-
-		if( (y-1) > 0)
-			result[idx] += 0.05 * shSpace[THX_2D(thx,thy-1)];
-		if( (y-2) > 0 )
-			result[idx] += 0.025* shSpace[THX_2D(thx,thy-2)];
-		if( (y+1) < Y_SIZE )
-			result[idx] += 0.05 * shSpace[THX_2D(thx,thy+1)];
-		if( (y+2) < Y_SIZE )
-			result[idx] += 0.025* shSpace[THX_2D(thx,thy+2)];
-		if( (x-1) > 0 )
-			result[idx] += 0.05 * shSpace[THX_2D(thx-1,thy)];
-		if( (x-2) > 0 )
-			result[idx] += 0.025* shSpace[THX_2D(thx-2,thy)];
-		if( (x+1) < X_SIZE )
-			result[idx] += 0.05 * shSpace[THX_2D(thx+1,thy)];
-		if( (x+2) < X_SIZE )
-			result[idx] += 0.025* shSpace[THX_2D(thx+2,thy)];
+		result[idx]  = 0.7 * shSpace[THX_2D(thx,thy)];
+		result[idx] += 0.05 * shSpace[THX_2D(thx,thy-1)];
+		result[idx] += 0.025* shSpace[THX_2D(thx,thy-2)];
+		result[idx] += 0.05 * shSpace[THX_2D(thx,thy+1)];
+		result[idx] += 0.025* shSpace[THX_2D(thx,thy+2)];
+		result[idx] += 0.05 * shSpace[THX_2D(thx-1,thy)];
+		result[idx] += 0.025* shSpace[THX_2D(thx-2,thy)];
+		result[idx] += 0.05 * shSpace[THX_2D(thx+1,thy)];
+		result[idx] += 0.025* shSpace[THX_2D(thx+2,thy)];
 	}
 }
 
@@ -180,15 +174,15 @@ __global__ void step(fraction* spaceData,fraction* resultData)
 
 void simulation(fraction* d_space,fraction* d_result)
 {
-	static int N = X_SIZE * Y_SIZE;
 	static dim3 threadsPerBlock(TH_IN_BLCK_X, TH_IN_BLCK_Y);
-	static dim3 numBlocks(N / threadsPerBlock.x, N / threadsPerBlock.y);
+	static dim3 numBlocks(ceil(float(X_SIZE) / float(threadsPerBlock.x)),
+						  ceil(float(Y_SIZE) / float(threadsPerBlock.y)));
 	static int	shMemSize = sizeof(float) *
 		(threadsPerBlock.x + 2) *
 		(threadsPerBlock.y + 2); // each thread - each cell);
 				// + boundaries threads need neighbours from other block
 
-	advect<<<numBlocks,threadsPerBlock>>>(d_space,d_result,DT);
-	//step<<<numBlocks, threadsPerBlock>>>(d_result,d_space);
+	//advect<<<numBlocks,threadsPerBlock>>>(d_space,d_result,DT);
+	//step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
 	stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_result,d_space);
 }
