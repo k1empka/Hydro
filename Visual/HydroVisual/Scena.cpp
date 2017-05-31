@@ -1,38 +1,46 @@
 #include "Scena.h"
 
-void Scena::init3D(HWND hWnd)
+bool Scena::init3D(HWND hWnd)
 {
-	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	try
+	{
+		d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
-	D3DPRESENT_PARAMETERS d3dpp;
+		D3DPRESENT_PARAMETERS d3dpp;
 
-	ZeroMemory(&d3dpp, sizeof(d3dpp));
-	d3dpp.Windowed = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.hDeviceWindow = hWnd;
-	d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
-	d3dpp.BackBufferWidth = SCREEN_WIDTH;
-	d3dpp.BackBufferHeight = SCREEN_HEIGHT;
-	d3dpp.EnableAutoDepthStencil = TRUE;
-	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+		ZeroMemory(&d3dpp, sizeof(d3dpp));
+		d3dpp.Windowed = TRUE;
+		d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+		d3dpp.hDeviceWindow = hWnd;
+		d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
+		d3dpp.BackBufferWidth = SCREEN_WIDTH;
+		d3dpp.BackBufferHeight = SCREEN_HEIGHT;
+		d3dpp.EnableAutoDepthStencil = TRUE;
+		d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
 
-	d3d->CreateDevice(
-		D3DADAPTER_DEFAULT,
-		D3DDEVTYPE_HAL,
-		hWnd,
-		D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-		&d3dpp,
-		&d3ddev
-	);
+		d3d->CreateDevice(
+			D3DADAPTER_DEFAULT,
+			D3DDEVTYPE_HAL,
+			hWnd,
+			D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+			&d3dpp,
+			&d3ddev
+		);
 
-	D3DXCreateFont(d3ddev, 25, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, "Arial", &font);
-	SetRect(&fRectangle, 0, 0, 100, 30);
+		D3DXCreateFont(d3ddev, 25, 0, FW_NORMAL, 1, false, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, "Arial", &font);
+		SetRect(&fRectangle, 0, 0, 100, 30);
 
-	d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE);
-	d3ddev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE); 
-	d3ddev->SetRenderState(D3DRS_ZENABLE, TRUE); // 3D - Z axis
+		d3ddev->SetRenderState(D3DRS_LIGHTING, FALSE);
+		d3ddev->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE); 
+		d3ddev->SetRenderState(D3DRS_ZENABLE, TRUE); // 3D - Z axis
+	}
+	catch (int index)
+	{
+		MessageBoxA(hWnd, "Problem with 3D init: "+ static_cast <char>(index), "Error", MB_OK);
+		return false;
+	}
 
-	return;
+	return true;
 }
 
 void Scena::renderFrame()
@@ -41,9 +49,9 @@ void Scena::renderFrame()
 	for (int i = 0; i < iterations[currentIter].elementsNum; i++)
 	{
 		if(cubes[i].v_buffer == NULL)
-			cubes[i].InitObject(d3ddev,iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 255, 0);
+			cubes[i].InitObject(d3ddev,iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 150, 0);
 		else
-			cubes[i].UpdateColor(iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 255, 0);
+			cubes[i].UpdateColor(iterations[currentIter].point[i].x, iterations[currentIter].point[i].y, 0, 150, 0);
 	}
 
 	d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
@@ -94,7 +102,7 @@ void Scena::cleanD3D()
 	font->Release();
 }
 
-void Scena::initIterations(char *path)
+bool Scena::initIterations(char *path, HWND hWnd)
 {
 
 	bool sizeReaded = false;
@@ -104,42 +112,55 @@ void Scena::initIterations(char *path)
 
 	int index = 0;
 	int currentIter = 0;
-	while (getline(myfile, line))
+	if (myfile.is_open())
 	{
-		std::vector<std::string> vec;
-		UINT size = split(line, vec, ' ');
-		if (!sizeReaded)
+		try
 		{
-			SIZE_X = std::atoi(vec.at(0).c_str());
-			SIZE_Y = std::atoi(vec.at(1).c_str());
-			iterationNum = std::stoul(vec.at(2), nullptr, 0);
-			unsigned int sizeMap = SIZE_X*SIZE_Y;
-			cubes = new Cube[sizeMap];
-			iterations = new IterationStruct[iterationNum];
-			sizeReaded = true;
-			for (int i = 0; i < iterationNum; i++)
+			while (getline(myfile, line))
 			{
-				iterations[i].point = new Point[sizeMap];
+				std::vector<std::string> vec;
+				UINT size = split(line, vec, ' ');
+				if (!sizeReaded)
+				{
+					SIZE_X = std::atoi(vec.at(0).c_str());
+					SIZE_Y = std::atoi(vec.at(1).c_str());
+					iterationNum = std::stoul(vec.at(2), nullptr, 0);
+					unsigned int sizeMap = SIZE_X*SIZE_Y;
+					cubes = new Cube[sizeMap];
+					iterations = new IterationStruct[iterationNum];
+					sizeReaded = true;
+					for (int i = 0; i < iterationNum; i++)
+						iterations[i].point = new Point[sizeMap];
+					continue;
+				}
+				if (vec.at(0).find("ITER_") != std::string::npos)
+				{
+					iterations[currentIter].elementsNum = index;
+					index = 0;
+					currentIter = std::atoi(vec.at(0).substr(5, 6).c_str());
+					continue;
+				}
+				float x = (float)std::atof(vec.at(0).c_str());
+				float y = (float)std::atof(vec.at(1).c_str());
+				float intensity = (float)std::atof(vec.at(2).c_str());
+				iterations[currentIter].point[index].x = x;
+				iterations[currentIter].point[index].y = y;
+				iterations[currentIter].intensity = intensity;
+				index++;
 			}
-			continue;
 		}
-		if (vec.at(0).find("ITER_") != std::string::npos)
+		catch (int index)
 		{
-			iterations[currentIter].elementsNum = index;
-			index = 0;
-			currentIter = std::atoi(vec.at(0).substr(5, 6).c_str());
-			continue;
+			myfile.close();
+			MessageBoxA(hWnd, "Problem with content of file: " + static_cast <char>(index), "Error", MB_OK);
+			return false;
 		}
-		if (vec.size() == 5)
-		{
-			float x = (float)std::atof(vec.at(0).c_str());
-			float y = (float)std::atof(vec.at(1).c_str());
-			iterations[currentIter].point[index].x = x;
-			iterations[currentIter].point[index].y = y;
-			index++;
-		}
+		myfile.close();
 	}
-	myfile.close();
+	else
+		return false;
+
+	return true;
 
 }
 

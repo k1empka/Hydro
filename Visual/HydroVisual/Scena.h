@@ -30,8 +30,8 @@ public:
 	int currentIter = 0;
 	unsigned int iterationNum = 0;
 
-	void init3D(HWND hWnd);
-	void initIterations(char *path);
+	bool init3D(HWND hWnd);
+	bool initIterations(char *path, HWND hWnd);
 	void renderFrame();
 	void cleanD3D();
 	void cleanBuff();

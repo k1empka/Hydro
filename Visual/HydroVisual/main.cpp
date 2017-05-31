@@ -41,12 +41,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(hWnd, nShowCmd);
 
 	MSG msg;
+	bool start = TRUE;
 
 	Scena *scena = new Scena();
-	scena->init3D(hWnd);
-	scena->initIterations(lpCmdLine);
+	if (!scena->init3D(hWnd))
+		start = false;
 
-	while (TRUE)
+	if (!scena->initIterations(lpCmdLine, hWnd))
+	{
+		MessageBoxA(hWnd, "Can not open file", "Error", MB_OK);
+		start = false;
+	}
+
+	while (start)
 	{
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{

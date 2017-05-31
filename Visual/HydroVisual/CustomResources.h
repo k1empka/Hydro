@@ -18,5 +18,6 @@ struct Point
 struct IterationStruct
 {
 	unsigned int elementsNum;
+	float intensity;
 	Point *point;
 };
