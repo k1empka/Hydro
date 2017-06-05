@@ -2,6 +2,19 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 
+#define cudaCheckErrors(msg) \
+    do { \
+        cudaError_t __err = cudaGetLastError(); \
+        if (__err != cudaSuccess) { \
+            fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
+                msg, cudaGetErrorString(__err), \
+                __FILE__, __LINE__); \
+            fprintf(stderr, "*** FAILED - ABORTING\n"); \
+            exit(1); \
+        } \
+    } while(0);
+
+
 __device__ float bilinterp(float* source, float x, float y,int xSize, int ySize)
 {
 	int x0,x1,y0,y1;
@@ -75,59 +88,56 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 	const int nCount = 2; //neighbours count
 	extern __shared__ float shSpace[];
+	shSpace[THX_2D(threadIdx.x,threadIdx.y)] = 0;
+	shSpace[THX_2D(threadIdx.x+4,threadIdx.y+4)] = 0;
 
 	if(x<X_SIZE && y<Y_SIZE)
 	{
 		float* result = resultData->U;
 		float* space  = spaceData->U;
-		int thx = threadIdx.x, thy = threadIdx.y;
+		int thx = threadIdx.x+2, thy = threadIdx.y+2;
+		int idx = IDX_2D(x,y);
 
-		thx += nCount;
-		thy += nCount;
+		__syncthreads(); // wait for threads to fill whole shared memory
 
-		shSpace[THX_2D(thx-2,thy-2)] = 0;
-		shSpace[THX_2D(thx+2,thy+2)] = 0;
-		__syncthreads();
 		shSpace[THX_2D(thx,thy)] = space[IDX_2D(x,y)];
 
-		if(thx == 0 && x > 1)
+		if(threadIdx.x == 0 && x > 1)
 		{
-			shSpace[THX_2D(thx - nCount,thy)] = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx - 2,thy)] = space[IDX_2D(x-2,y)];
 		}
-		if(thx == 1 && x > 2)
+		if(threadIdx.x == 1 && x > 2)
 		{
-			shSpace[THX_2D(thx - nCount,thy)] = space[IDX_2D(x-nCount,y)];
+			shSpace[THX_2D(thx - 2,thy)] = space[IDX_2D(x-2,y)];
 		}
-		if(thx == blockDim.x - nCount && x < X_SIZE - 2)
-		{
-			shSpace[THX_2D(thx + nCount,thy)] = space[IDX_2D(x+nCount,y)];
-		}
-		if(thx == blockDim.x - 1 && x < X_SIZE - 1)
+		if(threadIdx.x == blockDim.x - nCount && x < X_SIZE - 2)
 		{
 			shSpace[THX_2D(thx + nCount,thy)] = space[IDX_2D(x+nCount,y)];
 		}
-		if(thy == 0 && y > 1)
+		if(threadIdx.x == blockDim.x - 1 && x < X_SIZE - 1)
+		{
+			shSpace[THX_2D(thx + nCount,thy)] = space[IDX_2D(x+nCount,y)];
+		}
+		if(threadIdx.y == 0 && y > 1)
 		{
 			shSpace[THX_2D(thx,thy - nCount)] = space[IDX_2D(x,y-nCount)];
 		}
-		if(thy == 1 && y > 2)
+		if(threadIdx.y  == 1 && y > 2)
 		{
 			shSpace[THX_2D(thx,thy - nCount)] = space[IDX_2D(x,y-nCount)];
 		}
-		if(thy == blockDim.y - nCount && y < Y_SIZE - 2)
+		if(threadIdx.y  == blockDim.y - nCount && y < Y_SIZE - 2)
 		{
 			shSpace[THX_2D(thx,thy + nCount)] = space[IDX_2D(x,y+nCount)];
 		}
-		if(thy == blockDim.y - 1 && y < Y_SIZE - 1)
+		if(threadIdx.y  == blockDim.y - 1 && y < Y_SIZE - 1)
 		{
 			shSpace[THX_2D(thx,thy + nCount)] = space[IDX_2D(x,y+nCount)];
 		}
 
 		__syncthreads(); // wait for threads to fill whole shared memory
 
-		int idx = IDX_2D(x,y);
-
-		result[idx]  = 0.7 * shSpace[THX_2D(thx,thy)];
+		result[idx]  = 0.7  * shSpace[THX_2D(thx,thy)];
 		result[idx] += 0.05 * shSpace[THX_2D(thx,thy-1)];
 		result[idx] += 0.025* shSpace[THX_2D(thx,thy-2)];
 		result[idx] += 0.05 * shSpace[THX_2D(thx,thy+1)];
@@ -178,11 +188,12 @@ void simulation(fraction* d_space,fraction* d_result)
 	static dim3 numBlocks(ceil(float(X_SIZE) / float(threadsPerBlock.x)),
 						  ceil(float(Y_SIZE) / float(threadsPerBlock.y)));
 	static int	shMemSize = sizeof(float) *
-		(threadsPerBlock.x + 2) *
-		(threadsPerBlock.y + 2); // each thread - each cell);
+		(threadsPerBlock.x + 4) *
+		(threadsPerBlock.y + 4); // each thread - each cell);
 				// + boundaries threads need neighbours from other block
 
 	//advect<<<numBlocks,threadsPerBlock>>>(d_space,d_result,DT);
 	//step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
-	stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_result,d_space);
+	stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_space,d_result);
+    cudaCheckErrors("stepSh failed!");
 }

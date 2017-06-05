@@ -17,8 +17,8 @@ void initCuda()
         printf("CUDA device [%s] has %d Multi-Processors\n",
                props.name, props.multiProcessorCount);
      }
-    if(nDevices > 0)
-        cudaSetDevice(nDevices - 1); //Dla mnie bo mam SLI;
+    if(nDevices > 1)
+        cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
 fraction* initSpace()
@@ -41,11 +41,11 @@ fraction* initSpace()
 
 	srand (time(NULL));
 
-	for(int i=0; i<NUM_OF_START_FRACTIONS; ++i)
+	for(int x=0; x<20; ++x)
+		for(int y=0; y<20; ++y)
+
 	{
-		int x = 40 + rand()%20;
-		int y = 40 + rand()%20;
-		int idx = IDX_2D(x,y);
+		int idx = IDX_2D(40+x,40+y);
 		space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
 		space->Vx[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
 		space->Vy[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
@@ -105,11 +105,10 @@ int main()
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		bool isEven = (i % 2) == 0;
 		fraction* tmp;
 		Timer::getInstance().start("Simulation time");
 
-		if(!isEven)
+		if((i % 2) != 0)
 		{
 			tmp = d_space;
 			d_space = d_result;
