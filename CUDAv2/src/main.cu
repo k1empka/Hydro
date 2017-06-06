@@ -71,10 +71,13 @@ void printIteration(FILE* f,fraction* space, int iter)
 		}
 }
 
-FILE* initOutputFile()
+FILE* initOutputFile(bool hostSimulation)
 {
 	char filename[100];
-	sprintf(filename,"result");
+	if(hostSimulation)
+		sprintf(filename,"hostResult");
+	else
+		sprintf(filename,"result");
 	FILE *f = fopen(filename, "w");
 	if (f == NULL)
 	{
@@ -84,8 +87,19 @@ FILE* initOutputFile()
 	return f;
 }
 
+inline void swapFractionPointers(fraction*& p1,fraction*& p2)
+{
+	fraction* tmp;
+
+	tmp=p1;
+	p1=p2;
+	p2=tmp;
+}
+
 int main()
 {
+	bool hostSimulationOn = true;
+
 	initCuda();
 
 	fraction* space = initSpace();
@@ -99,20 +113,17 @@ int main()
 	cudaMalloc((void **)&d_result,totalSize);
 	cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
 
-	FILE* f = initOutputFile();
+	FILE* f = initOutputFile(false);
 
 	printHeader(f);
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		fraction* tmp;
 		Timer::getInstance().start("Simulation time");
 
 		if((i % 2) != 0)
 		{
-			tmp = d_space;
-			d_space = d_result;
-			d_result = tmp;
+			swapFractionPointers(d_space,d_result);
 		}
 
 		simulation(d_space,d_result);
@@ -122,11 +133,46 @@ int main()
 	}
 	printf("Simulation completed\n");
 	Timer::getInstance().printResults();
+
 	cudaFree(d_space);
 	cudaFree(d_result);
 	free(space);
-
 	fclose(f);
+
+	if(hostSimulationOn)
+	{
+		Timer::getInstance().clear();
+		fraction* result=(fraction*)malloc(totalSize);
+		if(NULL == result)
+			return -1;
+
+		space=initSpace();
+
+		f = initOutputFile(hostSimulationOn);
+
+		printHeader(f);
+		printf("Host simulation started\n");
+		for(int i=0;i<NUM_OF_ITERATIONS;++i)
+		{
+			Timer::getInstance().start("Simulation time");
+
+			if((i % 2) != 0)
+			{
+				swapFractionPointers(space,result);
+			}
+
+			hostSimulation(space,result);
+			Timer::getInstance().stop("Simulation time");
+			printIteration(f,space,i);
+		}
+		printf("Host simulation completed\n");
+		Timer::getInstance().printResults();
+
+		cudaFree(d_space);
+		cudaFree(d_result);
+		free(space);
+		fclose(f);
+	}
 
 	return 0;
 }

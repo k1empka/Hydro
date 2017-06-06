@@ -1,8 +1,8 @@
 #pragma once
 
-#define NUM_OF_ITERATIONS 100
-#define X_SIZE 100
-#define Y_SIZE 100
+#define NUM_OF_ITERATIONS 500
+#define X_SIZE 500
+#define Y_SIZE 500
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
 #define DT 0.5
@@ -31,3 +31,4 @@ struct fraction
 };
 
 void simulation(fraction* space,fraction* result);
+void hostSimulation(fraction* space,fraction* result);
