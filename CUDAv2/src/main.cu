@@ -31,24 +31,33 @@ fraction* initSpace()
 		return NULL;
 	}
 
-	for(int y=0; y<Y_SIZE; ++y)
-		for(int x=0; x<X_SIZE;++x)
+	for(int z=0; z<Z_SIZE; ++z)
+	{
+		for(int y=0; y<Y_SIZE; ++y)
 		{
-			space->Vx[IDX_2D(x,y)]=0.;
-			space->Vy[IDX_2D(x,y)]=0.;
-			space->U[IDX_2D(x,y)]=0.;
+			for(int x=0; x<X_SIZE;++x)
+			{
+				space->Vx[IDX_3D(x,y,z)]=0.;
+				space->Vy[IDX_3D(x,y,z)]=0.;
+				space->U[IDX_3D(x,y,z)]=0.;
+			}
 		}
+	}
 
 	srand (time(NULL));
 
-	for(int x=0; x<20; ++x)
-		for(int y=0; y<20; ++y)
-
+	for(int z=0;z<20;++z)
 	{
-		int idx = IDX_2D(40+x,40+y);
-		space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
-		space->Vx[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
-		space->Vy[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
+		for(int x=0; x<20; ++x)
+		{
+			for(int y=0; y<20; ++y)
+			{
+				int idx = IDX_3D(40+x,40+y,40+z);
+				space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
+				space->Vx[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
+				space->Vy[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
+			}
+		}
 	}
 
 	return space;
@@ -56,19 +65,36 @@ fraction* initSpace()
 
 void printHeader(FILE* f)
 {
-	fprintf(f,"%d %d %d\n",X_SIZE,Y_SIZE,NUM_OF_ITERATIONS);
+	int16_t x=(int16_t)X_SIZE;
+	int16_t y=(int16_t)Y_SIZE;
+	int16_t z=(int16_t)Z_SIZE;
+	int16_t i=(int16_t)NUM_OF_ITERATIONS;
+	int16_t floatSize=(int16_t)sizeof(float);
+	int size=sizeof(int16_t);
+	fwrite(&x,size,1,f);
+	fwrite(&y,size,1,f);
+	fwrite(&z,size,1,f);
+	fwrite(&i,size,1,f);
+	fwrite(&floatSize,size,1,f);
 }
 
 void printIteration(FILE* f,fraction* space, int iter)
 {
-	fprintf(f,"ITER_%d\n",iter);
+	float v;
+	int size = sizeof(float);
 
-	for(int y=0; y<Y_SIZE;++y)
-		for(int x=0; x<X_SIZE;++x)
+
+	for(int z=0; z<Z_SIZE;++z)
+	{
+		for(int y=0; y<Y_SIZE;++y)
 		{
-			if(space->U[y*X_SIZE+x] > 0.001f)
-				fprintf(f,"%d %d %f %f\n",x,y,space->U[y*X_SIZE+x],space->U[y*X_SIZE+x]);
+			for(int x=0; x<X_SIZE;++x)
+			{
+				v =space->U[IDX_3D(x,y,z)];
+				fwrite(&v,size,1,f);
+			}
 		}
+	}
 }
 
 FILE* initOutputFile(bool hostSimulation)
@@ -78,7 +104,7 @@ FILE* initOutputFile(bool hostSimulation)
 		sprintf(filename,"hostResult");
 	else
 		sprintf(filename,"result");
-	FILE *f = fopen(filename, "w");
+	FILE *f = fopen(filename, "wb");
 	if (f == NULL)
 	{
 	    printf("Error opening file!\n");
