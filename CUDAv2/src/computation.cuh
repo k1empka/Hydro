@@ -11,9 +11,10 @@
 #define H  1 // radius for SPH
 #define P_MASS 2 // mass - no idea about value
 
-#define TH_IN_BLCK_X 16
-#define TH_IN_BLCK_Y 16
-#define NUM_NEIGH 4 // neighbours number affected for single cell
+#define TH_IN_BLCK_X 8
+#define TH_IN_BLCK_Y 8
+#define TH_IN_BLCK_Z 8
+#define NUM_NEIGH 4 // neighbours number affected for single cell in row
 #define THX_2D(x,y) ((y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
 #define THX_3D(x,y,z) ((z) * ((TH_IN_BLCK_Y+NUM_NEIGH) * (TH_IN_BLCK_X+NUM_NEIGH)) + (y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
 #define IDX_2D(x,y) ((y) * X_SIZE + x)

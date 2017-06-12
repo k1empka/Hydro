@@ -145,7 +145,7 @@ int main()
 	printf("Simulation started\n");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		Timer::getInstance().start("Simulation time");
+		Timer::getInstance().start("Device simulation time");
 
 		if((i % 2) != 0)
 		{
@@ -154,7 +154,7 @@ int main()
 
 		simulation(d_space,d_result);
 		cudaMemcpy(space,d_result,totalSize, cudaMemcpyDeviceToHost);
-		Timer::getInstance().stop("Simulation time");
+		Timer::getInstance().stop("Device simulation time");
 		printIteration(f,space,i);
 	}
 	printf("Simulation completed\n");
@@ -180,7 +180,7 @@ int main()
 		printf("Host simulation started\n");
 		for(int i=0;i<NUM_OF_ITERATIONS;++i)
 		{
-			Timer::getInstance().start("Simulation time");
+			Timer::getInstance().start("Host simulation time");
 
 			if((i % 2) != 0)
 			{
@@ -188,7 +188,7 @@ int main()
 			}
 
 			hostSimulation(space,result);
-			Timer::getInstance().stop("Simulation time");
+			Timer::getInstance().stop("Host simulation time");
 			printIteration(f,space,i);
 		}
 		printf("Host simulation completed\n");
