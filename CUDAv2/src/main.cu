@@ -46,6 +46,8 @@ fraction* initSpace()
 
 	srand (time(NULL));
 
+	//W TYM FORZE JEST JAKIS BLAD ALE NIE WIEM JAKI...
+
 	for(int z=0;z<20;++z)
 	{
 		for(int x=0; x<20; ++x)
@@ -59,6 +61,8 @@ fraction* initSpace()
 			}
 		}
 	}
+
+	//POWYZEJ JEST JAKIS BLAD ALE NIE WIEM JAKI...
 
 	return space;
 }
@@ -124,7 +128,7 @@ inline void swapFractionPointers(fraction*& p1,fraction*& p2)
 
 int main()
 {
-	bool hostSimulationOn = true;
+	bool hostSimulationOn = false;
 
 	initCuda();
 
@@ -172,11 +176,12 @@ int main()
 		if(NULL == result)
 			return -1;
 
-		space=initSpace();
+		space=initSpace();//PRZY DRUGIM WYWOLANIU TEJ FUNKCJI JEST CORE DUMP
 
 		f = initOutputFile(hostSimulationOn);
 
 		printHeader(f);
+
 		printf("Host simulation started\n");
 		for(int i=0;i<NUM_OF_ITERATIONS;++i)
 		{

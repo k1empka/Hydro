@@ -171,6 +171,138 @@ __global__ void stepSh(fraction* spaceData,fraction* resultData)
 	}
 }
 
+__global__ void stepShForIn(fraction* spaceData,fraction* resultData)
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+	const int nCount = 2; //neighbours count
+	extern __shared__ float shSpace[];
+	shSpace[THX_3D(threadIdx.x,threadIdx.y,threadIdx.z)] = 0;
+	shSpace[THX_3D(threadIdx.x+4,threadIdx.y+4,threadIdx.z+4)] = 0;
+
+	if(x<X_SIZE && y<Y_SIZE)
+	{
+		float* result = resultData->U;
+		float* space  = spaceData->U;
+		int z = 0;
+		int thx = threadIdx.x+2, thy = threadIdx.y+2,thz = z+2;
+		int idx = IDX_3D(x,y,z);
+
+		//load initial data
+		shSpace[THX_3D(thx,thy,thz)] = space[IDX_3D(x,y,z)];
+
+		if(threadIdx.x == 0 && x > 1)
+		{
+			shSpace[THX_2D(thx - 2,thy)] = space[IDX_2D(x-2,y)];
+		}
+		if(threadIdx.x == 1 && x > 2)
+		{
+			shSpace[THX_3D(thx - 2,thy,thz)] = space[IDX_3D(x-2,y,z)];
+		}
+		if(threadIdx.x == blockDim.x - nCount && x < X_SIZE - 2)
+		{
+			shSpace[THX_3D(thx + nCount,thy,thz)] = space[IDX_3D(x+nCount,y,z)];
+		}
+		if(threadIdx.x == blockDim.x - 1 && x < X_SIZE - 1)
+		{
+			shSpace[THX_3D(thx + nCount,thy,thz)] = space[IDX_3D(x+nCount,y,z)];
+		}
+		if(threadIdx.y == 0 && y > 1)
+		{
+			shSpace[THX_3D(thx,thy - nCount,thz)] = space[IDX_3D(x,y-nCount,z)];
+		}
+		if(threadIdx.y  == 1 && y > 2)
+		{
+			shSpace[THX_3D(thx,thy - nCount,thz)] = space[IDX_3D(x,y-nCount,z)];
+		}
+		if(threadIdx.y  == blockDim.y - nCount && y < Y_SIZE - 2)
+		{
+			shSpace[THX_3D(thx,thy + nCount,thz)] = space[IDX_3D(x,y+nCount,z)];
+		}
+		if(threadIdx.y  == blockDim.y - 1 && y < Y_SIZE - 1)
+		{
+			shSpace[THX_3D(thx,thy + nCount,thz)] = space[IDX_3D(x,y+nCount,z)];
+		}
+		if(threadIdx.z == 0 && z > 1)
+		{
+			shSpace[THX_3D(thx,thy,thz - nCount)] = space[IDX_3D(x,y,z - nCount)];
+		}
+		if(threadIdx.z  == 1 && z > 2)
+		{
+			shSpace[THX_3D(thx,thy,thz - nCount)] = space[IDX_3D(x,y,z - nCount)];
+		}
+		if(threadIdx.z  == blockDim.z - nCount && z < Z_SIZE - 2)
+		{
+			shSpace[THX_3D(thx,thy,thz + nCount)] = space[IDX_3D(x,y,z+nCount)];
+		}
+		if(threadIdx.z  == blockDim.z - 1 && z < Z_SIZE - 1)
+		{
+			shSpace[THX_3D(thx,thy,thz + nCount)] = space[IDX_3D(x,y,z+nCount)];
+		}
+		__syncthreads(); // wait for threads to fill whole shared memory
+
+		for(; z < Z_SIZE; ++z)
+		{
+			thz = z+2;
+
+			//now we will load only portion of data to shared memory
+			if(threadIdx.x == 0 && x > 1)
+			{
+				shSpace[THX_2D(thx - 2,thy)] = space[IDX_2D(x-2,y)];
+			}
+			if(threadIdx.x == 1 && x > 2)
+			{
+				shSpace[THX_3D(thx - 2,thy,thz)] = space[IDX_3D(x-2,y,z)];
+			}
+			if(threadIdx.x == blockDim.x - nCount && x < X_SIZE - 2)
+			{
+				shSpace[THX_3D(thx + nCount,thy,thz)] = space[IDX_3D(x+nCount,y,z)];
+			}
+			if(threadIdx.x == blockDim.x - 1 && x < X_SIZE - 1)
+			{
+				shSpace[THX_3D(thx + nCount,thy,thz)] = space[IDX_3D(x+nCount,y,z)];
+			}
+			if(threadIdx.y == 0 && y > 1)
+			{
+				shSpace[THX_3D(thx,thy - nCount,thz)] = space[IDX_3D(x,y-nCount,z)];
+			}
+			if(threadIdx.y  == 1 && y > 2)
+			{
+				shSpace[THX_3D(thx,thy - nCount,thz)] = space[IDX_3D(x,y-nCount,z)];
+			}
+			if(threadIdx.y  == blockDim.y - nCount && y < Y_SIZE - 2)
+			{
+				shSpace[THX_3D(thx,thy + nCount,thz)] = space[IDX_3D(x,y+nCount,z)];
+			}
+			if(threadIdx.y  == blockDim.y - 1 && y < Y_SIZE - 1)
+			{
+				shSpace[THX_3D(thx,thy + nCount,thz)] = space[IDX_3D(x,y+nCount,z)];
+			}
+			if(threadIdx.z  == blockDim.z - 1 && z < Z_SIZE - 1)
+			{
+				shSpace[THX_3D(thx,thy,thz + nCount)] = space[IDX_3D(x,y,z+nCount)];
+			}
+
+			__syncthreads(); // wait for threads to fill whole shared memory
+
+			result[idx]  = 0.7  * shSpace[THX_3D(thx,thy,thz)];
+
+			result[idx] += 0.03 * shSpace[THX_3D(thx,thy-1,thz)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx,thy-2,thz)];
+			result[idx] += 0.03 * shSpace[THX_3D(thx,thy+1,thz)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx,thy+2,thz)];
+			result[idx] += 0.03 * shSpace[THX_3D(thx-1,thy,thz)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx-2,thy,thz)];
+			result[idx] += 0.03 * shSpace[THX_3D(thx+1,thy,thz)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx+2,thy,thz)];
+			result[idx] += 0.03 * shSpace[THX_3D(thx,thy,thz-1)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx,thy,thz-2)];
+			result[idx] += 0.03 * shSpace[THX_3D(thx,thy,thz+1)];
+			result[idx] += 0.02 * shSpace[THX_3D(thx,thy,thz+2)];
+		}
+	}
+}
+
 __global__ void step(fraction* spaceData,fraction* resultData)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -218,15 +350,32 @@ void simulation(fraction* d_space,fraction* d_result)
 	static dim3 threadsPerBlock(TH_IN_BLCK_X, TH_IN_BLCK_Y,TH_IN_BLCK_Z);
 	static dim3 numBlocks(ceil(float(X_SIZE) / float(threadsPerBlock.x)),
 						  ceil(float(Y_SIZE) / float(threadsPerBlock.y)),
-						  ceil(float(Z_SIZE) / float(threadsPerBlock.z)));//threadsPerBlock.z=1;
+						  ceil(float(Z_SIZE) / float(threadsPerBlock.z)));
 	static int	shMemSize = sizeof(float) *
 		(threadsPerBlock.x + 4) *
 		(threadsPerBlock.y + 4) *
 		(threadsPerBlock.z + 4); // each thread - each cell);
-				// + boundaries threads need neighbours from other block
+				// + boundaries threads need neighbors from other block
 
 	//advect<<<numBlocks,threadsPerBlock>>>(d_space,d_result,DT);
-	step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
+	//step<<<numBlocks, threadsPerBlock>>>(d_space,d_result);
 	//stepSh<<<numBlocks, threadsPerBlock,shMemSize>>>(d_space,d_result);
+
+	threadsPerBlock.x=2*TH_IN_BLCK_X;
+	threadsPerBlock.y=2*TH_IN_BLCK_Y;
+	threadsPerBlock.z=1;
+
+	numBlocks.x = ceil(float(X_SIZE) / float(threadsPerBlock.x));
+	numBlocks.y = ceil(float(Y_SIZE) / float(threadsPerBlock.y));
+	numBlocks.z = 1;
+
+	shMemSize = sizeof(float) *
+			(threadsPerBlock.x + 4) *
+			(threadsPerBlock.y + 4) *
+			(Z_SIZE); // each thread - each cell);
+					// + boundaries threads need neighbors from other block
+
+	stepShForIn<<<numBlocks, threadsPerBlock,shMemSize>>>(d_space,d_result);
+
     cudaCheckErrors("stepSh failed!");
 }
