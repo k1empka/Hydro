@@ -249,7 +249,7 @@ __global__ void stepShared3DLayer(fraction* spaceData,fraction* resultData,int z
 	}
 }
 
-__global__ void stepShForIn(fraction* spaceData,fraction* resultData)
+__global__ void stepSharedForIn(fraction* spaceData,fraction* resultData)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -477,11 +477,23 @@ void simulationShared3dLayer(fraction* d_space,fraction* d_result)
 
 }
 
+void simulationShared3dForIn(fraction* d_space,fraction* d_result)
+{
+	static dim3 thds(TH_IN_BLCK_X*2, TH_IN_BLCK_Y*2);
+	static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
+					      blockSizeOf(Y_SIZE,thds.y));
+	static auto	shMemSize = calcSharedSize(thds) * Z_SIZE;
+	printOnce("Shared For In\n");
+	stepSharedForIn<<<numBlocks, thds,shMemSize>>>(d_space,d_result);
+}
+
+
 void simulation(fraction* d_space,fraction* d_result)
 {
-	simulationGlobal(d_space,d_result);
+	//simulationGlobal(d_space,d_result);
 	//simulationShared3dCube(d_space,d_result);
-	//simulationShared3dLayer(d_space,d_result);
+	simulationShared3dLayer(d_space,d_result);
+	//simulationShared3dForIn(d_space,d_result);
     cudaCheckErrors("step failed!");
 }
 
