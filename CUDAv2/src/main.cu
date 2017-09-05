@@ -37,8 +37,6 @@ fraction* initSpace()
 		{
 			for(int x=0; x<X_SIZE;++x)
 			{
-				space->Vx[IDX_3D(x,y,z)]=0.;
-				space->Vy[IDX_3D(x,y,z)]=0.;
 				space->U[IDX_3D(x,y,z)]=0.;
 			}
 		}
@@ -124,7 +122,7 @@ inline void swapFractionPointers(fraction*& p1,fraction*& p2)
 
 int main()
 {
-	bool hostSimulationOn = true;
+	bool hostSimulationOn = false;
 
 	initCuda();
 

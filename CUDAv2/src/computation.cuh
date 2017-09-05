@@ -1,9 +1,9 @@
 #pragma once
 
 #define NUM_OF_ITERATIONS 100
-#define X_SIZE 100
-#define Y_SIZE 100
-#define Z_SIZE 100
+#define X_SIZE 150
+#define Y_SIZE 150
+#define Z_SIZE 150
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
 #define DT 0.5
@@ -29,8 +29,8 @@
 struct fraction
 {
 	float  U[X_SIZE*Y_SIZE*Z_SIZE];
-	float  Vx[X_SIZE*Y_SIZE*Z_SIZE];
-	float  Vy[X_SIZE*Y_SIZE*Z_SIZE];
+	float  Vx[X_SIZE];
+	float  Vy[Y_SIZE];
 	//TODO more paramas
 };
 
