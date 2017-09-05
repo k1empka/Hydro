@@ -266,3 +266,4 @@ __pycache__/
 #SIMULATION OUTPUT FILES
 /Cuda/results.txt
 /CUDAv2/.cproject
+.project
