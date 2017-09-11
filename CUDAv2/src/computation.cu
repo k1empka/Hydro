@@ -249,6 +249,88 @@ __global__ void stepShared3DLayer(fraction* spaceData,fraction* resultData,int z
 	}
 }
 
+__global__ void stepShared3DLayerForIn(fraction* spaceData,fraction* resultData)
+{
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+	const int nCount = 2; //neighbours count
+	extern __shared__ float shSpace[];
+	shSpace[THX_2D(threadIdx.x,threadIdx.y)] = 0;
+	shSpace[THX_2D(threadIdx.x+4,threadIdx.y+4)] = 0;
+
+	if(x<X_SIZE && y<Y_SIZE)
+	{
+		float* result = resultData->U;
+		float* space  = spaceData->U;
+		int thx = threadIdx.x+2, thy = threadIdx.y+2;
+
+		for(int z=0; z<Z_SIZE; ++z)
+		{
+			int idx = IDX_3D(x,y,z);
+
+			shSpace[THX_2D(thx,thy)] = space[IDX_3D(x,y,z)];
+
+			if(threadIdx.x == 0 && x > 1)
+			{
+				shSpace[THX_2D(thx - 2,thy)] = space[IDX_3D(x-2,y,z)];
+			}
+			if(threadIdx.x == 1 && x > 2)
+			{
+				shSpace[THX_2D(thx - 2,thy)] = space[IDX_3D(x-2,y,z)];
+			}
+			if(threadIdx.x == blockDim.x - nCount && x < X_SIZE - 2)
+			{
+				shSpace[THX_2D(thx + nCount,thy)] = space[IDX_3D(x+nCount,y,z)];
+			}
+			if(threadIdx.x == blockDim.x - 1 && x < X_SIZE - 1)
+			{
+				shSpace[THX_2D(thx + nCount,thy)] = space[IDX_3D(x+nCount,y,z)];
+			}
+			if(threadIdx.y == 0 && y > 1)
+			{
+				shSpace[THX_2D(thx,thy - nCount)] = space[IDX_3D(x,y-nCount,z)];
+			}
+			if(threadIdx.y  == 1 && y > 2)
+			{
+				shSpace[THX_2D(thx,thy - nCount)] = space[IDX_3D(x,y-nCount,z)];
+			}
+			if(threadIdx.y  == blockDim.y - nCount && y < Y_SIZE - 2)
+			{
+				shSpace[THX_2D(thx,thy + nCount)] = space[IDX_3D(x,y+nCount,z)];
+			}
+			if(threadIdx.y  == blockDim.y - 1 && y < Y_SIZE - 1)
+			{
+				shSpace[THX_2D(thx,thy + nCount)] = space[IDX_3D(x,y+nCount,z)];
+			}
+
+			__syncthreads(); // wait for threads to fill whole shared memory
+
+			// Calculate cell  with data from shared memory (Layer part x,y)
+			result[idx]  = 0.7  * shSpace[THX_2D(thx,thy)];
+
+			result[idx] += 0.03 * shSpace[THX_2D(thx,thy-1)];
+			result[idx] += 0.02 * shSpace[THX_2D(thx,thy-2)];
+			result[idx] += 0.03 * shSpace[THX_2D(thx,thy+1)];
+			result[idx] += 0.02 * shSpace[THX_2D(thx,thy+2)];
+			result[idx] += 0.03 * shSpace[THX_2D(thx-1,thy)];
+			result[idx] += 0.02 * shSpace[THX_2D(thx-2,thy)];
+			result[idx] += 0.03 * shSpace[THX_2D(thx+1,thy)];
+			result[idx] += 0.02 * shSpace[THX_2D(thx+2,thy)];
+
+			// Calculate the rest of data (Cross Z asix)
+			if( (z+2) < Z_SIZE )
+				result[idx] +=.02 *space[IDX_3D(x,y,z+2)];
+			if( (z-2) > 0 )
+				result[idx] +=.02 *space[IDX_3D(x,y,z-2)];
+			if( (z+1) < Z_SIZE )
+				result[idx] +=.03 *space[IDX_3D(x,y,z+1)];
+			if( (z-1) > 0 )
+				result[idx] +=.03 *space[IDX_3D(x,y,z-1)];
+		}
+
+	}
+}
+
 __global__ void stepSharedForIn(fraction* spaceData,fraction* resultData)
 {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -477,6 +559,18 @@ void simulationShared3dLayer(fraction* d_space,fraction* d_result)
 
 }
 
+void simulationShared3dLayerForIn(fraction* d_space,fraction* d_result)
+{
+	static dim3 thds(TH_IN_BLCK_X, TH_IN_BLCK_Y);
+	static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
+					      blockSizeOf(Y_SIZE,thds.y));
+	static auto	shMemSize = calcSharedSize(thds);
+	printOnce("Shared Layer by Layer for inside kernel\n");
+
+	stepShared3DLayerForIn<<<numBlocks, thds,shMemSize>>>(d_space,d_result);
+
+}
+
 void simulationShared3dForIn(fraction* d_space,fraction* d_result)
 {
 	static dim3 thds(TH_IN_BLCK_X*2, TH_IN_BLCK_Y*2);
@@ -493,7 +587,8 @@ void simulation(fraction* d_space,fraction* d_result)
 	//simulationGlobal(d_space,d_result);
 	//simulationShared3dCube(d_space,d_result);
 	//simulationShared3dLayer(d_space,d_result);
-	simulationShared3dForIn(d_space,d_result);
+	//simulationShared3dForIn(d_space,d_result);
+	simulationShared3dLayerForIn(d_space,d_result);
     cudaCheckErrors("step failed!");
 }
 
