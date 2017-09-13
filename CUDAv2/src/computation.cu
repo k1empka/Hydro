@@ -226,26 +226,29 @@ __global__ void stepShared3DLayer(fraction* spaceData,fraction* resultData,int z
 		__syncthreads(); // wait for threads to fill whole shared memory
 
 		// Calculate cell  with data from shared memory (Layer part x,y)
-		result[idx]  = 0.7  * shSpace[THX_2D(thx,thy)];
+		float resultCell;
+		resultCell  = 0.7  * shSpace[THX_2D(thx,thy)];
 
-		result[idx] += 0.03 * shSpace[THX_2D(thx,thy-1)];
-		result[idx] += 0.02 * shSpace[THX_2D(thx,thy-2)];
-		result[idx] += 0.03 * shSpace[THX_2D(thx,thy+1)];
-		result[idx] += 0.02 * shSpace[THX_2D(thx,thy+2)];
-		result[idx] += 0.03 * shSpace[THX_2D(thx-1,thy)];
-		result[idx] += 0.02 * shSpace[THX_2D(thx-2,thy)];
-		result[idx] += 0.03 * shSpace[THX_2D(thx+1,thy)];
-		result[idx] += 0.02 * shSpace[THX_2D(thx+2,thy)];
+		resultCell += 0.03 * shSpace[THX_2D(thx,thy-1)];
+		resultCell += 0.02 * shSpace[THX_2D(thx,thy-2)];
+		resultCell += 0.03 * shSpace[THX_2D(thx,thy+1)];
+		resultCell += 0.02 * shSpace[THX_2D(thx,thy+2)];
+		resultCell += 0.03 * shSpace[THX_2D(thx-1,thy)];
+		resultCell += 0.02 * shSpace[THX_2D(thx-2,thy)];
+		resultCell += 0.03 * shSpace[THX_2D(thx+1,thy)];
+		resultCell += 0.02 * shSpace[THX_2D(thx+2,thy)];
 
 		// Calculate the rest of data (Cross Z asix)
 		if( (z+2) < Z_SIZE )
-			result[idx] +=.02 *space[IDX_3D(x,y,z+2)];
+			resultCell +=.02 *space[IDX_3D(x,y,z+2)];
 		if( (z-2) > 0 )
-			result[idx] +=.02 *space[IDX_3D(x,y,z-2)];
+			resultCell +=.02 *space[IDX_3D(x,y,z-2)];
 		if( (z+1) < Z_SIZE )
-			result[idx] +=.03 *space[IDX_3D(x,y,z+1)];
+			resultCell +=.03 *space[IDX_3D(x,y,z+1)];
 		if( (z-1) > 0 )
-			result[idx] +=.03 *space[IDX_3D(x,y,z-1)];
+			resultCell +=.03 *space[IDX_3D(x,y,z-1)];
+
+		result[idx] = resultCell;
 	}
 }
 
