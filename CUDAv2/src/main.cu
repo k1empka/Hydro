@@ -1,149 +1,55 @@
 #include <helper_cuda.h>
-#include <time.h>
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "computation.cuh"
-#include "Timer.h"
+#include "utils.h"
+#include "customTimer.h"
 
-void initCuda()
+
+void execHost()
 {
-	int nDevices;
-    int devCount = cudaGetDeviceCount(&nDevices);
-    for (int i = 0; i < nDevices; i++)
-    {
-        cudaDeviceProp props;
-        checkCudaErrors(cudaGetDeviceProperties(&props, i));
-        printf("CUDA device [%s] has %d Multi-Processors\n",
-               props.name, props.multiProcessorCount);
-     }
-    if(nDevices > 1)
-        cudaSetDevice(1); //Dla mnie bo mam SLI;
-}
+	Timer::getInstance().clear();
+	int totalSize=sizeof(fraction);
+	fraction* space,*result=(fraction*)malloc(totalSize);
+	FILE* f;
 
-fraction* initSpace()
-{
-	fraction* space = (fraction*)malloc(sizeof(fraction));
+	if(NULL == result)
+		exit(-1);
 
-	if(NULL==space)
+	space=initSpace();
+
+	f = initOutputFile(true);
+
+	printHeader(f);
+
+	printf("Host simulation started\n");
+	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		printf("memory allocation error\n");
-		return NULL;
-	}
+		Timer::getInstance().start("Host simulation time");
 
-	for(int z=0; z<Z_SIZE; ++z)
-	{
-		for(int y=0; y<Y_SIZE; ++y)
+		if((i % 2) != 0)
 		{
-			for(int x=0; x<X_SIZE;++x)
-			{
-				space->U[IDX_3D(x,y,z)]=0.;
-			}
+			swapFractionPointers(space,result);
 		}
+
+		hostSimulation(space,result);
+		Timer::getInstance().stop("Host simulation time");
+		printIteration(f,space,i);
 	}
+	printf("Host simulation completed\n");
+	Timer::getInstance().printResults();
 
-	srand (time(NULL));
-
-	const float SPACE_FACTOR = .2;
-	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
-	const int X_SPACE = (int)ceil(X_SIZE*SPACE_FACTOR);
-	const int Y_SPACE = (int)ceil(Y_SIZE*SPACE_FACTOR);
-
-	const float PLACE_FACTOR = 0.4;
-	const int Z_PLACE = (int)ceil(Z_SIZE*PLACE_FACTOR);
-	const int X_PLACE = (int)ceil(X_SIZE*PLACE_FACTOR);
-	const int Y_PLACE = (int)ceil(Y_SIZE*PLACE_FACTOR);
-
-	for(int z=0;z<Z_SPACE;++z)
-	{
-		for(int x=0; x<X_SPACE; ++x)
-		{
-			for(int y=0; y<Y_SPACE; ++y)
-			{
-				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
-				space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
-				space->Vx[X_PLACE+x]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
-				space->Vy[Y_PLACE+y]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
-			}
-		}
-	}
-
-	return space;
+	free(space);
+	free(result);
+	fclose(f);
 }
 
-void printHeader(FILE* f)
+void execDevice()
 {
-	int16_t x=(int16_t)X_SIZE;
-	int16_t y=(int16_t)Y_SIZE;
-	int16_t z=(int16_t)Z_SIZE;
-	int16_t i=(int16_t)NUM_OF_ITERATIONS;
-	int16_t floatSize=(int16_t)sizeof(float);
-	int size=sizeof(int16_t);
-	fwrite(&x,size,1,f);
-	fwrite(&y,size,1,f);
-	fwrite(&z,size,1,f);
-	fwrite(&i,size,1,f);
-	fwrite(&floatSize,size,1,f);
-}
-
-void printIteration(FILE* f,fraction* space, int iter)
-{
-	float v;
-	int size = sizeof(float);
-
-
-	for(int z=0; z<Z_SIZE;++z)
-	{
-		for(int y=0; y<Y_SIZE;++y)
-		{
-			for(int x=0; x<X_SIZE;++x)
-			{
-				v =space->U[IDX_3D(x,y,z)];
-				fwrite(&v,size,1,f);
-			}
-		}
-	}
-}
-
-FILE* initOutputFile(bool hostSimulation)
-{
-	char filename[100];
-	if(hostSimulation)
-		sprintf(filename,"hostResult");
-	else
-		sprintf(filename,"result");
-	FILE *f = fopen(filename, "wb");
-	if (f == NULL)
-	{
-	    printf("Error opening file!\n");
-	    exit(1);
-	}
-	return f;
-}
-
-inline void swapFractionPointers(fraction*& p1,fraction*& p2)
-{
-	fraction* tmp;
-
-	tmp=p1;
-	p1=p2;
-	p2=tmp;
-}
-
-int main()
-{
-	bool hostSimulationOn = true;
-
-	initCuda();
-
-	printf("Po Init Cuda\n");
-
 	fraction* space = initSpace();
 
-	printf("Po init sapce\n");
-
 	if(NULL==space)
-		return -1;
+		exit(-1);
 
 	fraction *d_space,*d_result;
 	int totalSize=sizeof(fraction);
@@ -176,41 +82,17 @@ int main()
 	cudaFree(d_result);
 	free(space);
 	fclose(f);
+}
+int main()
+{
+	bool hostSimulationOn = true;
+
+	initCuda();
+	execDevice();
 
 	if(hostSimulationOn)
 	{
-		Timer::getInstance().clear();
-		fraction* result=(fraction*)malloc(totalSize);
-		if(NULL == result)
-			return -1;
-
-		space=initSpace();
-
-		f = initOutputFile(hostSimulationOn);
-
-		printHeader(f);
-
-		printf("Host simulation started\n");
-		for(int i=0;i<NUM_OF_ITERATIONS;++i)
-		{
-			Timer::getInstance().start("Host simulation time");
-
-			if((i % 2) != 0)
-			{
-				swapFractionPointers(space,result);
-			}
-
-			hostSimulation(space,result);
-			Timer::getInstance().stop("Host simulation time");
-			printIteration(f,space,i);
-		}
-		printf("Host simulation completed\n");
-		Timer::getInstance().printResults();
-
-		cudaFree(d_space);
-		cudaFree(d_result);
-		free(space);
-		fclose(f);
+		//execHost();
 	}
 
 	return 0;

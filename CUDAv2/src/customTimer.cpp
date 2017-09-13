@@ -1,4 +1,4 @@
-#include "Timer.h"
+#include "customTimer.h"
 #include <iostream>
 
 Timer &Timer::getInstance()

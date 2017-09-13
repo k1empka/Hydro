@@ -2,17 +2,7 @@
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 #include <mutex>
-#define cudaCheckErrors(msg) \
-    do { \
-        cudaError_t __err = cudaGetLastError(); \
-        if (__err != cudaSuccess) { \
-            fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
-                msg, cudaGetErrorString(__err), \
-                __FILE__, __LINE__); \
-            fprintf(stderr, "*** FAILED - ABORTING\n"); \
-            exit(1); \
-        } \
-    } while(0);
+
 
 /*
 __device__ float bilinearinterpolation(float* source, float x, float y,int xSize, int ySize)
@@ -589,9 +579,9 @@ void simulation(fraction* d_space,fraction* d_result)
 {
 	//simulationGlobal(d_space,d_result);
 	//simulationShared3dCube(d_space,d_result);
-	//simulationShared3dLayer(d_space,d_result);
+	simulationShared3dLayer(d_space,d_result);
 	//simulationShared3dForIn(d_space,d_result);
-	simulationShared3dLayerForIn(d_space,d_result);
+	//simulationShared3dLayerForIn(d_space,d_result);
     cudaCheckErrors("step failed!");
 }
 
