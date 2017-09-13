@@ -44,23 +44,29 @@ fraction* initSpace()
 
 	srand (time(NULL));
 
-	//W TYM FORZE JEST JAKIS BLAD ALE NIE WIEM JAKI...
+	const float SPACE_FACTOR = .2;
+	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
+	const int X_SPACE = (int)ceil(X_SIZE*SPACE_FACTOR);
+	const int Y_SPACE = (int)ceil(Y_SIZE*SPACE_FACTOR);
 
-	for(int z=0;z<20;++z)
+	const float PLACE_FACTOR = 0.4;
+	const int Z_PLACE = (int)ceil(Z_SIZE*PLACE_FACTOR);
+	const int X_PLACE = (int)ceil(X_SIZE*PLACE_FACTOR);
+	const int Y_PLACE = (int)ceil(Y_SIZE*PLACE_FACTOR);
+
+	for(int z=0;z<Z_SPACE;++z)
 	{
-		for(int x=0; x<20; ++x)
+		for(int x=0; x<X_SPACE; ++x)
 		{
-			for(int y=0; y<20; ++y)
+			for(int y=0; y<Y_SPACE; ++y)
 			{
-				int idx = IDX_3D(40+x,40+y,40+z);
+				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
 				space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
-				space->Vx[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
-				space->Vy[idx]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
+				space->Vx[X_PLACE+x]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
+				space->Vy[Y_PLACE+y]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
 			}
 		}
 	}
-
-	//POWYZEJ JEST JAKIS BLAD ALE NIE WIEM JAKI...
 
 	return space;
 }
@@ -126,11 +132,15 @@ inline void swapFractionPointers(fraction*& p1,fraction*& p2)
 
 int main()
 {
-	bool hostSimulationOn = false;
+	bool hostSimulationOn = true;
 
 	initCuda();
 
+	printf("Po Init Cuda\n");
+
 	fraction* space = initSpace();
+
+	printf("Po init sapce\n");
 
 	if(NULL==space)
 		return -1;
@@ -174,7 +184,7 @@ int main()
 		if(NULL == result)
 			return -1;
 
-		space=initSpace();//PRZY DRUGIM WYWOLANIU TEJ FUNKCJI JEST CORE DUMP
+		space=initSpace();
 
 		f = initOutputFile(hostSimulationOn);
 

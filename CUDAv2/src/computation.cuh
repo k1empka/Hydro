@@ -3,7 +3,7 @@
 #define NUM_OF_ITERATIONS 10
 #define X_SIZE 150
 #define Y_SIZE 150
-#define Z_SIZE 150
+#define Z_SIZE 15
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
 #define DT 0.5
