@@ -27,7 +27,7 @@ void initCuda()
         cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
-fraction* initSpace()
+fraction* initSpace(const bool random)
 {
 	fraction* space = (fraction*)malloc(sizeof(fraction));
 
@@ -48,7 +48,9 @@ fraction* initSpace()
 		}
 	}
 
-	//srand(time(NULL));
+	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
+	if(true==random)
+		srand(time(NULL));
 
 	const float SPACE_FACTOR = .2;
 	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
@@ -67,7 +69,10 @@ fraction* initSpace()
 			for(int y=0; y<Y_SPACE; ++y)
 			{
 				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
-				space->U[idx]= (float)(rand()%MAX_START_FORCE + 1);
+
+				//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
+				space->U[idx]= (float) ((true == random) ? (rand()%MAX_START_FORCE + 1) : (MAX_START_FORCE));
+
 				// We don't use it for now
 				//space->Vx[X_PLACE+x]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
 				//space->Vy[Y_PLACE+y]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
@@ -137,6 +142,20 @@ void swapFractionPointers(fraction*& p1,fraction*& p2)
 	p2=tmp;
 }
 
-
+void compare_results(fraction* space1,fraction* space2)
+{
+	for(int x=0; x<X_SIZE; ++x)
+	{
+		for(int y=0; y<Y_SIZE; ++y)
+		{
+			for(int z=0; z<Z_SIZE; ++z)
+			{
+				if(space1->U[IDX_3D(x,y,z)] != space2->U[IDX_3D(x,y,z)])
+					printf("DIFF (%d,%d,%d) space1=%f,space2=%f\n",
+							x,y,z,space1->U[IDX_3D(x,y,z)],space2->U[IDX_3D(x,y,z)]);
+			}
+		}
+	}
+}
 
 
