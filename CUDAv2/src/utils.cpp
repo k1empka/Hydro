@@ -144,18 +144,53 @@ void swapFractionPointers(fraction*& p1,fraction*& p2)
 
 void compare_results(fraction* space1,fraction* space2)
 {
+	float diffMax=0,diffMin=0;
+	int numOfDiffs=0;
+	int xMin=0,xMax=0,yMin=0,yMax=0,zMin=0,zMax=0;
+	bool firstDiff = true;
+
 	for(int x=0; x<X_SIZE; ++x)
 	{
 		for(int y=0; y<Y_SIZE; ++y)
 		{
 			for(int z=0; z<Z_SIZE; ++z)
 			{
-				if(space1->U[IDX_3D(x,y,z)] != space2->U[IDX_3D(x,y,z)])
-					printf("DIFF (%d,%d,%d) space1=%f,space2=%f\n",
-							x,y,z,space1->U[IDX_3D(x,y,z)],space2->U[IDX_3D(x,y,z)]);
+				int i = IDX_3D(x,y,z);
+
+				if(space1->U[i] != space2->U[i])
+				{
+					float diffPercent = ((space1->U[i]-space2->U[i])/space1->U[i])*100;
+
+					if(true==firstDiff)
+					{
+						diffMax = diffPercent;
+						diffMin = diffPercent;
+						firstDiff = false;
+						numOfDiffs++;
+						xMin=x; yMin=y; zMin=z;
+						xMax=x; yMax=y; zMax=z;
+					}
+					else
+					{
+						if(diffPercent>diffMax)
+						{
+							diffMax=diffPercent;
+							xMax=x; yMax=y; zMax=z;
+						}
+						if(diffPercent<diffMin)
+						{
+							diffMin=diffPercent;
+							xMin=x; yMin=y; zMin=z;
+						}
+						numOfDiffs++;
+					}
+				}
 			}
 		}
 	}
+
+	printf("Compare results:\n\tNum of differences: %d\n\tMax difference: %f%% in point (%d,%d,%d)\n\tMin difference: %f%% in point (%d,%d,%d)\n",
+			numOfDiffs,diffMax,xMax,yMax,zMax,diffMin,xMin,yMin,zMin);
 }
 
 

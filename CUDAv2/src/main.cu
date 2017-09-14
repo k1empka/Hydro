@@ -90,7 +90,7 @@ int main()
 {
 	bool hostSimulationOn = true;
 
-	fraction* hostOutputSpace,deviceOutputSpace;
+	fraction* hostOutputSpace,* deviceOutputSpace;
 
 	initCuda();
 	deviceOutputSpace=execDevice();

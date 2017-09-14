@@ -577,9 +577,9 @@ void simulationShared3dForIn(fraction* d_space,fraction* d_result)
 
 void simulation(fraction* d_space,fraction* d_result)
 {
-	//simulationGlobal(d_space,d_result);
+	simulationGlobal(d_space,d_result);
 	//simulationShared3dCube(d_space,d_result);
-	simulationShared3dLayer(d_space,d_result);
+	//simulationShared3dLayer(d_space,d_result);
 	//simulationShared3dForIn(d_space,d_result);
 	//simulationShared3dLayerForIn(d_space,d_result);
     cudaCheckErrors("step failed!");
