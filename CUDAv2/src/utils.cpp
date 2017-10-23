@@ -137,6 +137,20 @@ void swapFractionPointers(fraction*& p1,fraction*& p2)
 	p2=tmp;
 }
 
+void printData(float* data)
+{
+	printf("Data:\n");
+
+	for(int y = 0;y < Y_SIZE;++y)
+	{
+		for(int x = 0;x < X_SIZE;++x)
+		{
+			printf("%1f  ",data[IDX_3D(x,y,0)]);
+		}
+		printf("\n");
+	}
+	printf("\n");
+}
 
 
 

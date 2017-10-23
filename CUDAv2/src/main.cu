@@ -92,7 +92,7 @@ int main()
 
 	if(hostSimulationOn)
 	{
-		//execHost();
+		execHost();
 	}
 
 	return 0;

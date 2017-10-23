@@ -10,3 +10,4 @@ void      printIteration(FILE* f,fraction* space, int iter);
 void  	  swapFractionPointers(fraction*& p1,fraction*& p2);
 FILE*	  initOutputFile(bool hostSimulation);
 fraction* initSpace();
+void printData(float* data);
