@@ -5,8 +5,9 @@
 #include "utils.h"
 #include "customTimer.h"
 
+#define RANDOM false
 
-void execHost()
+fraction* execHost()
 {
 	Timer::getInstance().clear();
 	int totalSize=sizeof(fraction);
@@ -16,7 +17,7 @@ void execHost()
 	if(NULL == result)
 		exit(-1);
 
-	space=initSpace();
+	space=initSpace(RANDOM);
 
 	f = initOutputFile(true);
 
@@ -42,11 +43,13 @@ void execHost()
 	free(space);
 	free(result);
 	fclose(f);
+
+	return space;
 }
 
-void execDevice()
+fraction* execDevice()
 {
-	fraction* space = initSpace();
+	fraction* space = initSpace(RANDOM);
 
 	if(NULL==space)
 		exit(-1);
@@ -82,18 +85,27 @@ void execDevice()
 	cudaFree(d_result);
 	free(space);
 	fclose(f);
+
+	return space;
 }
 int main()
 {
 	bool hostSimulationOn = true;
 
+	fraction* hostOutputSpace,* deviceOutputSpace;
+
 	initCuda();
-	execDevice();
+	deviceOutputSpace=execDevice();
 
 	if(hostSimulationOn)
 	{
-		execHost();
+		hostOutputSpace=execHost();
 	}
+
+	compare_results(hostOutputSpace,deviceOutputSpace);
+
+	free(hostOutputSpace);
+	free(deviceOutputSpace);
 
 	return 0;
 }
