@@ -35,7 +35,7 @@ fraction* execHost()
 
 		hostSimulation(space,result);
 		Timer::getInstance().stop("Host simulation time");
-		printIteration(f,space,i);
+		printIteration(f,result,i);
 	}
 	printf("Host simulation completed\n");
 	Timer::getInstance().printResults();
@@ -102,7 +102,7 @@ int main()
 		hostOutputSpace=execHost();
 	}
 
-	compare_results(hostOutputSpace,deviceOutputSpace);
+    //compare_results(hostOutputSpace,deviceOutputSpace);
 
 	free(hostOutputSpace);
 	free(deviceOutputSpace);
