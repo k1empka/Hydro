@@ -1,4 +1,4 @@
-#include "computation.cuh"
+#include "computation.h"
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
 #include <mutex>

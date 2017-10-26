@@ -1,4 +1,4 @@
-#include "computation.cuh"
+#include "computation.h"
 
 void hostSimulation(fraction * spaceData, fraction *resultData)
 {

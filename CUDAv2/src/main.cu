@@ -4,45 +4,44 @@
 #include <stdio.h>
 #include "utils.h"
 #include "customTimer.h"
+#include "printer.h"
 
 #define RANDOM false
+#define PRINT_RESULTS false
 
 fraction* execHost()
 {
 	Timer::getInstance().clear();
 	int totalSize=sizeof(fraction);
 	fraction* space,*result=(fraction*)malloc(totalSize);
-	FILE* f;
+    if (NULL == result)
+    {
+        printf("Malloc problem!\n");
+        exit(-1);
+    }
 
-	if(NULL == result)
-		exit(-1);
-
-	space=initSpace(RANDOM);
-
-	f = initOutputFile(true);
-
-	printHeader(f);
-
+	space = initSpace(RANDOM);
+#if PRINT_RESULTS
+    Printer bytePrinter("host.data");
+#endif
 	printf("Host simulation started\n");
+    Timer::getInstance().start("Host simulation time");
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		Timer::getInstance().start("Host simulation time");
-
 		if((i % 2) != 0)
 		{
 			swapFractionPointers(space,result);
 		}
-
 		hostSimulation(space,result);
-		Timer::getInstance().stop("Host simulation time");
-		printIteration(f,result,i);
+#if PRINT_RESULTS
+        bytePrinter.printIteration(result, i);
+#endif
 	}
+    Timer::getInstance().stop("Host simulation time");
 	printf("Host simulation completed\n");
 	Timer::getInstance().printResults();
 
 	free(space);
-	fclose(f);
-
 	return result;
 }
 
@@ -54,36 +53,38 @@ fraction* execDevice()
 		exit(-1);
 
 	fraction *d_space,*d_result;
-	int totalSize=sizeof(fraction);
+	int totalSize = sizeof(fraction);
 	cudaMalloc((void **)&d_space,totalSize);
 	cudaMalloc((void **)&d_result,totalSize);
 	cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
 
-	FILE* f = initOutputFile(false);
-
-	printHeader(f);
+#if PRINT_RESULTS
+    Printer bytePrinter("device.data");
+#endif
 	printf("Simulation started\n");
+    Timer::getInstance().start("Device simulation time");
+
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		Timer::getInstance().start("Device simulation time");
-
 		if((i % 2) != 0)
 		{
 			swapFractionPointers(d_space,d_result);
 		}
-
 		simulation(d_space,d_result);
-		cudaMemcpy(space,d_result,totalSize, cudaMemcpyDeviceToHost);
-		Timer::getInstance().stop("Device simulation time");
-		printIteration(f,space,i);
+#if PRINT_RESULTS
+        cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+        bytePrinter.printIteration(space, i);
+#endif
 	}
+#if !PRINT_RESULTS
+    cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+#endif
+    Timer::getInstance().stop("Device simulation time");
 	printf("Simulation completed\n");
 	Timer::getInstance().printResults();
 
 	cudaFree(d_space);
 	cudaFree(d_result);
-	fclose(f);
-
 	return space;
 }
 int main()
@@ -93,17 +94,14 @@ int main()
 	fraction* hostOutputSpace,* deviceOutputSpace;
 
 	initCuda();
-	deviceOutputSpace=execDevice();
+	deviceOutputSpace = execDevice();
 
 	if(hostSimulationOn)
 	{
-		hostOutputSpace=execHost();
+		hostOutputSpace = execHost();
 	}
-
     compare_results(hostOutputSpace,deviceOutputSpace);
-
 	free(hostOutputSpace);
 	free(deviceOutputSpace);
-
 	return 0;
 }
