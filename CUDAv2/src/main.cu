@@ -41,10 +41,9 @@ fraction* execHost()
 	Timer::getInstance().printResults();
 
 	free(space);
-	free(result);
 	fclose(f);
 
-	return space;
+	return result;
 }
 
 fraction* execDevice()
@@ -83,7 +82,6 @@ fraction* execDevice()
 
 	cudaFree(d_space);
 	cudaFree(d_result);
-	free(space);
 	fclose(f);
 
 	return space;
@@ -102,7 +100,7 @@ int main()
 		hostOutputSpace=execHost();
 	}
 
-    //compare_results(hostOutputSpace,deviceOutputSpace);
+    compare_results(hostOutputSpace,deviceOutputSpace);
 
 	free(hostOutputSpace);
 	free(deviceOutputSpace);
