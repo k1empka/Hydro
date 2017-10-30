@@ -6,5 +6,5 @@
 void 	  initCuda();
 void  	  swapPointers(void*& p1,void*& p2);
 fraction* initSpace(const bool random);
-void      compare_results(fraction* space1,fraction* space2);
+void      compare_results(fraction* hostSpace,fraction* deviceSpace);
 void      printData(float* data);

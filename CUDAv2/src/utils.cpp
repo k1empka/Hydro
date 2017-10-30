@@ -92,7 +92,7 @@ void swapPointers(void*& p1,void*& p2)
 	p2=tmp;
 }
 
-void compare_results(fraction* space1,fraction* space2)
+void compare_results(fraction* hostSpace,fraction* deviceSpace)
 {
 	float diffMax=0,diffMin=0;
 	int numOfDiffs=0;
@@ -107,9 +107,9 @@ void compare_results(fraction* space1,fraction* space2)
 			{
 				int i = IDX_3D(x,y,z);
 
-				if(space1->U[i] != space2->U[i])
+				if(hostSpace->U[i] != deviceSpace->U[i])
 				{
-					float diffPercent = ((space1->U[i]-space2->U[i])/space1->U[i])*100;
+					float diffPercent = ((hostSpace->U[i]-deviceSpace->U[i])/hostSpace->U[i])*100;
 
 					if(true==firstDiff)
 					{
@@ -141,6 +141,32 @@ void compare_results(fraction* space1,fraction* space2)
 
 	printf("Compare results:\n\tNum of differences: %d\n\tMax difference: %f%% in point (%d,%d,%d)\n\tMin difference: %f%% in point (%d,%d,%d)\n",
 			numOfDiffs,diffMax,xMax,yMax,zMax,diffMin,xMin,yMin,zMin);
+
+	if( (diffMax>1.0 || diffMin<1.0) && X_SIZE<=10 && Y_SIZE<=10)
+	{
+		printf("\nhost:\n");
+		int z=0;
+		for(int x=0; x<X_SIZE; ++x)
+		{
+			for(int y=0; y<Y_SIZE; ++y)
+			{
+				int i = IDX_3D(x,y,z);
+				printf("\t %3.3f",hostSpace->U[i]);
+			}
+			printf("\n");
+		}
+		printf("\ndevice:\n");
+		for(int x=0; x<X_SIZE; ++x)
+		{
+			for(int y=0; y<Y_SIZE; ++y)
+			{
+				int i = IDX_3D(x,y,z);
+				printf("\t %3.3f",deviceSpace->U[i]);
+			}
+			printf("\n");
+		}
+	}
+
 }
 
 void printData(float* data)

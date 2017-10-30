@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cuda_runtime.h>
+
 #define NUM_OF_ITERATIONS 100
-#define X_SIZE 100
-#define Y_SIZE 100
-#define Z_SIZE 100
+#define X_SIZE 10
+#define Y_SIZE 10
+#define Z_SIZE 10
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
 #define DT 0.5
@@ -34,7 +36,7 @@ struct fraction
 	//TODO more paramas
 };
 
-enum deviceSimulationType{GLOBAL,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN,SHARED_3D_LAYER_FOR_IN};
+enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN,SHARED_3D_LAYER_FOR_IN};
 
 #define cudaCheckErrors(msg) \
     do { \
@@ -50,3 +52,4 @@ enum deviceSimulationType{GLOBAL,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN
 
 void simulation(void* space,void* result,enum deviceSimulationType type);
 void hostSimulation(void* space,void* result);
+void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData);

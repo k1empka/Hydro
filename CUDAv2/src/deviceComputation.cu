@@ -1,5 +1,4 @@
 #include "computation.h"
-#include <cuda_runtime.h>
 #include <helper_cuda.h>
 #include <mutex>
 
@@ -505,6 +504,85 @@ __global__ void stepGlobal(fraction* spaceData,fraction* resultData)
 	}
 }
 
+__global__ void stepSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
+{
+	const int x = blockIdx.x * blockDim.x + threadIdx.x;
+	const int y = blockIdx.y * blockDim.y + threadIdx.y;
+	const int z = blockIdx.z * blockDim.z + threadIdx.z;
+
+	if(x<X_SIZE && y<Y_SIZE && z<Z_SIZE)
+	{
+		const int idx = IDX_3D(x,y,z);
+
+		float data;
+		surf2Dread(&data,  spaceData, 4*idx,0);
+		float resultCell = 0.7*data;
+
+		if( (x+1) < X_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x+1,y,z),0);
+			resultCell +=.03 *data;
+		}
+		if( (x-1) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x-1,y,z),0);
+			resultCell +=.03 *data;
+		}
+		if( (y+1) < Y_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y+1,z),0);
+			resultCell +=.03 *data;
+		}
+		if( (y-1) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y-1,z),0);
+			resultCell +=.03 *data;
+		}
+		if( (z+1) < Z_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y,z+1),0);
+			resultCell +=.03 *data;
+		}
+		if( (z-1) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y,z-1),0);
+			resultCell +=.03 *data;
+		}
+		if( (x+2) < X_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x+2,y,z),0);
+			resultCell +=.02 *data;
+		}
+		if( (x-2) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x-2,y,z),0);
+			resultCell +=.02 *data;
+		}
+		if( (y+2) < Y_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y+2,z),0);
+			resultCell +=.02 *data;
+		}
+		if( (y-2) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y-2,z),0);
+			resultCell +=.02 *data;
+		}
+		if( (z+2) < Z_SIZE )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y,z+2),0);
+			resultCell +=.02 *data;
+		}
+		if( (z-2) >= 0 )
+		{
+			surf2Dread(&data,  spaceData, 4*IDX_3D(x,y,z-2),0);
+			resultCell +=.02 *data;
+		}
+
+		surf2Dwrite(resultCell, resultData, 4*idx,0);
+	}
+}
+
 int blockSizeOf(unsigned size,unsigned thdsInBlock)
 {
 	return ceil(float(size) / float(thdsInBlock));
@@ -534,6 +612,16 @@ void simulationGlobal(fraction* d_space,fraction* d_result)
 						  blockSizeOf(Z_SIZE,thds.z));
 	printOnce("Global\n");
 	stepGlobal<<<numBlocks, thds>>>(d_space,d_result);
+}
+
+void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
+{
+	static dim3 thds(TH_IN_BLCK_X, TH_IN_BLCK_Y,TH_IN_BLCK_Z);
+	static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
+						  blockSizeOf(Y_SIZE,thds.y),
+						  blockSizeOf(Z_SIZE,thds.z));
+	printOnce("Surface\n");
+	stepSurface<<<numBlocks, thds>>>(spaceData,resultData);
 }
 
 void simulationShared3dCube(fraction* d_space,fraction* d_result)
