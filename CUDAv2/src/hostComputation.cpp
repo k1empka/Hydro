@@ -1,10 +1,12 @@
 #include "computation.h"
 
-void hostSimulation(fraction * spaceData, fraction *resultData)
+void hostSimulation(void* spaceData, void* resultData)
 {
 	int idx;
-	float* result = resultData->U;
-	float* space  = spaceData->U;
+	fraction* spaceFraction = (fraction*)spaceData;
+	fraction* resultFraction = (fraction*)resultData;
+	float* result = resultFraction->U;
+	float* space  = spaceFraction->U;
 
 	for(int z=0; z<Z_SIZE;++z)
 	{

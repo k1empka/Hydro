@@ -583,13 +583,26 @@ void simulationShared3dForIn(fraction* d_space,fraction* d_result)
 }
 
 
-void simulation(fraction* d_space,fraction* d_result)
+void simulation(void* space,void* result,enum deviceSimulationType type)
 {
-	simulationGlobal(d_space,d_result);
-	//simulationShared3dCube(d_space,d_result);
-	//simulationShared3dLayer(d_space,d_result);
-	//simulationShared3dForIn(d_space,d_result);
-	//simulationShared3dLayerForIn(d_space,d_result);
+	switch(type)
+	{
+	case GLOBAL:
+		simulationGlobal((fraction*)space,(fraction*)result);
+		break;
+	case SHARED_3D_CUBE:
+		simulationShared3dCube((fraction*)space,(fraction*)result);
+		break;
+	case SHARED_3D_LAYER:
+		simulationShared3dLayer((fraction*)space,(fraction*)result);
+		break;
+	case SHARED_3D_FOR_IN:
+		simulationShared3dForIn((fraction*)space,(fraction*)result);
+		break;
+	case SHARED_3D_LAYER_FOR_IN:
+		simulationShared3dLayerForIn((fraction*)space,(fraction*)result);
+		break;
+	}
     cudaCheckErrors("step failed!");
 }
 

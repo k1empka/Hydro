@@ -34,6 +34,8 @@ struct fraction
 	//TODO more paramas
 };
 
+enum deviceSimulationType{GLOBAL,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN,SHARED_3D_LAYER_FOR_IN};
+
 #define cudaCheckErrors(msg) \
     do { \
         cudaError_t __err = cudaGetLastError(); \
@@ -46,5 +48,5 @@ struct fraction
         } \
     } while(0);
 
-void simulation(fraction* space,fraction* result);
-void hostSimulation(fraction* space,fraction* result);
+void simulation(void* space,void* result,enum deviceSimulationType type);
+void hostSimulation(void* space,void* result);

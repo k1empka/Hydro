@@ -13,7 +13,7 @@ fraction* execHost()
 {
 	Timer::getInstance().clear();
 	int totalSize=sizeof(fraction);
-	fraction* space,*result=(fraction*)malloc(totalSize);
+	void* space,*result=(fraction*)malloc(totalSize);
     if (NULL == result)
     {
         printf("Malloc problem!\n");
@@ -30,7 +30,7 @@ fraction* execHost()
 	{
 		if((i % 2) != 0)
 		{
-			swapFractionPointers(space,result);
+			swapPointers(space,result);
 		}
 		hostSimulation(space,result);
 #if PRINT_RESULTS
@@ -42,17 +42,17 @@ fraction* execHost()
 	Timer::getInstance().printResults();
 
 	free(space);
-	return result;
+	return (fraction*)result;
 }
 
-fraction* execDevice()
+fraction* execDevice(enum deviceSimulationType type)
 {
 	fraction* space = initSpace(RANDOM);
 
 	if(NULL==space)
 		exit(-1);
 
-	fraction *d_space,*d_result;
+	void *d_space,*d_result;
 	int totalSize = sizeof(fraction);
 	cudaMalloc((void **)&d_space,totalSize);
 	cudaMalloc((void **)&d_result,totalSize);
@@ -68,9 +68,9 @@ fraction* execDevice()
 	{
 		if((i % 2) != 0)
 		{
-			swapFractionPointers(d_space,d_result);
+			swapPointers(d_space,d_result);
 		}
-		simulation(d_space,d_result);
+		simulation(d_space,d_result,type);
 #if PRINT_RESULTS
         cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
         bytePrinter.printIteration(space, i);
@@ -90,11 +90,12 @@ fraction* execDevice()
 int main()
 {
 	bool hostSimulationOn = true;
+	enum deviceSimulationType type = GLOBAL;
 
 	fraction* hostOutputSpace,* deviceOutputSpace;
 
 	initCuda();
-	deviceOutputSpace = execDevice();
+	deviceOutputSpace = execDevice(type);
 
 	if(hostSimulationOn)
 	{

@@ -83,9 +83,9 @@ fraction* initSpace(const bool random)
 	return space;
 }
 
-void swapFractionPointers(fraction*& p1,fraction*& p2)
+void swapPointers(void*& p1,void*& p2)
 {
-	fraction* tmp;
+	void* tmp;
 
 	tmp=p1;
 	p1=p2;
