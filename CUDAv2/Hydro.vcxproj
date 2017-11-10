@@ -27,7 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
-    <ClCompile Include="src\Fraction.cpp" />
+    <ClCompile Include="src\Fraction.cu" />
     <ClCompile Include="src\hostComputation.cpp" />
     <ClCompile Include="src\printer.cpp" />
     <ClCompile Include="src\utils.cpp" />
@@ -111,6 +111,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile>
       <AdditionalDeps>%(AdditionalDeps)</AdditionalDeps>
       <Include>$(NVCUDASAMPLES_ROOT)\common\inc\</Include>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <GenerateLineInfo>true</GenerateLineInfo>
+      <PtxAsOptionV>false</PtxAsOptionV>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <Runtime>InheritFromHost</Runtime>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -152,6 +157,11 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <Command>echo copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <CudaRuntime>Static</CudaRuntime>
+      <NvccCompilation>compile</NvccCompilation>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>

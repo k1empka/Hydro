@@ -2,6 +2,7 @@
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "utils.h"
 #include "customTimer.h"
 #include "printer.h"
@@ -15,6 +16,7 @@ Fraction* execHost()
 	Timer::getInstance().clear();
 	int totalSize=sizeof(Fraction) * SIZE;
 	void* space,*result=(Fraction*)malloc(totalSize);
+    auto params = initParams();
     if (NULL == result)
     {
         printf("Malloc problem!\n");
@@ -33,7 +35,7 @@ Fraction* execHost()
 		{
 			swapPointers(space,result);
 		}
-		hostSimulation(initParams(),space,result);
+		hostSimulation(&params,space,result);
 #if PRINT_RESULTS
         bytePrinter.printIteration(result, i);
 #endif

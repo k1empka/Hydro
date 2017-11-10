@@ -1,5 +1,6 @@
 #pragma once
 #include <cuda_runtime.h>
+
 #include "Fraction.h"
 
 #define NUM_OF_ITERATIONS 100
@@ -26,7 +27,7 @@
  *  more info: http://matthias-mueller-fischer.ch/publications/sca03.pdf
  */
 
-enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN,SHARED_3D_LAYER_FOR_IN};
+enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_LAYER,SHARED_3D_LAYER_FOR_IN};
 
 struct FluidParams
 {
@@ -53,4 +54,4 @@ void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultD
 
 __host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data, int3 pos);
 __device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fraction cur, Fraction zn,
-                            Fraction znn, Fraction* storage[TH_IN_BLCK_Y + 4][TH_IN_BLCK_X + 4]);
+                            Fraction znn, Fraction storage[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4]);
