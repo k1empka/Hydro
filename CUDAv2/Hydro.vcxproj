@@ -21,16 +21,19 @@
   <ItemGroup>
     <ClInclude Include="src\computation.h" />
     <ClInclude Include="src\customTimer.h" />
+    <ClInclude Include="src\Fraction.h" />
     <ClInclude Include="src\printer.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
+    <ClCompile Include="src\Fraction.cpp" />
     <ClCompile Include="src\hostComputation.cpp" />
     <ClCompile Include="src\printer.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <CudaCompile Include="src\computation.cu" />
     <CudaCompile Include="src\deviceComputation.cu" />
     <CudaCompile Include="src\main.cu" />
   </ItemGroup>

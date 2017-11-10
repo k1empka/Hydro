@@ -5,11 +5,21 @@
  *      Author: mknap
  */
 #include "utils.h"
+#include "Fraction.h"
 #include <helper_cuda.h>
 #include <time.h>
 #include <cuda_runtime.h>
 #include <stdlib.h>
 #include <cmath>
+
+FluidParams initParams()
+{
+    FluidParams params;
+    params.d = make_float4(1, 1, 1, 1);
+    params.omega = 1;
+    params.mustaSteps = 10;
+    return params;
+}
 
 void initCuda()
 {
@@ -27,9 +37,9 @@ void initCuda()
         cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
-fraction* initSpace(const bool random)
+Fraction* initSpace(const bool random)
 {
-	fraction* space = (fraction*)malloc(sizeof(fraction));
+    Fraction* space = new Fraction[SIZE];
 
 	if(NULL==space)
 	{
@@ -37,22 +47,18 @@ fraction* initSpace(const bool random)
 		return NULL;
 	}
 
-	for(int z=0; z<Z_SIZE; ++z)
-	{
-		for(int y=0; y<Y_SIZE; ++y)
-		{
-			for(int x=0; x<X_SIZE;++x)
-			{
-				space->U[IDX_3D(x,y,z)]=0.;
-			}
-		}
-	}
-
-	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
+	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFERENT RESULT EACH TIME
 	if(true==random)
 		srand(time(NULL));
 
-	const float SPACE_FACTOR = .2;
+
+    const int X_MID = X_SIZE / 2;
+    const int Y_MID = Y_SIZE / 2;
+    const int Z_MID = Z_SIZE / 2;
+
+    space[IDX_3D(X_MID, Y_MID, Z_MID)] = Fraction(100,100,make_float3(5.,0.,0.));
+
+/*	const float SPACE_FACTOR = .2;
 	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
 	const int X_SPACE = (int)ceil(X_SIZE*SPACE_FACTOR);
 	const int Y_SPACE = (int)ceil(Y_SIZE*SPACE_FACTOR);
@@ -71,14 +77,14 @@ fraction* initSpace(const bool random)
 				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
 
 				//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
-				space->U[idx]= (float) ((true == random) ? (rand()%MAX_START_FORCE + 1) : (MAX_START_FORCE));
+				space[idx]= (float) ((true == random) ? (rand()%MAX_START_FORCE + 1) : (MAX_START_FORCE));
 
 				// We don't use it for now
 				//space->Vx[X_PLACE+x]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
 				//space->Vy[Y_PLACE+y]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
 			}
 		}
-	}
+	}*/
 
 	return space;
 }
@@ -92,81 +98,21 @@ void swapPointers(void*& p1,void*& p2)
 	p2=tmp;
 }
 
-void compare_results(fraction* hostSpace,fraction* deviceSpace)
+void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 {
 	float diffMax=0,diffMin=0;
 	int numOfDiffs=0;
-	int xMin=0,xMax=0,yMin=0,yMax=0,zMin=0,zMax=0;
 	bool firstDiff = true;
 
-	for(int x=0; x<X_SIZE; ++x)
+	for(int i=0; i<SIZE; ++i)
 	{
-		for(int y=0; y<Y_SIZE; ++y)
+		if(hostSpace[i].E != deviceSpace[i].E)
 		{
-			for(int z=0; z<Z_SIZE; ++z)
-			{
-				int i = IDX_3D(x,y,z);
-
-				if(hostSpace->U[i] != deviceSpace->U[i])
-				{
-					float diffPercent = ((hostSpace->U[i]-deviceSpace->U[i])/hostSpace->U[i])*100;
-
-					if(true==firstDiff)
-					{
-						diffMax = diffPercent;
-						diffMin = diffPercent;
-						firstDiff = false;
-						numOfDiffs++;
-						xMin=x; yMin=y; zMin=z;
-						xMax=x; yMax=y; zMax=z;
-					}
-					else
-					{
-						if(diffPercent>diffMax)
-						{
-							diffMax=diffPercent;
-							xMax=x; yMax=y; zMax=z;
-						}
-						if(diffPercent<diffMin)
-						{
-							diffMin=diffPercent;
-							xMin=x; yMin=y; zMin=z;
-						}
-						numOfDiffs++;
-					}
-				}
-			}
-		}
+            numOfDiffs++;
+		}	
 	}
 
-	printf("Compare results:\n\tNum of differences: %d\n\tMax difference: %f%% in point (%d,%d,%d)\n\tMin difference: %f%% in point (%d,%d,%d)\n",
-			numOfDiffs,diffMax,xMax,yMax,zMax,diffMin,xMin,yMin,zMin);
-
-	if( (diffMax>1.0 || diffMin<1.0) && X_SIZE<=10 && Y_SIZE<=10)
-	{
-		printf("\nhost:\n");
-		int z=0;
-		for(int x=0; x<X_SIZE; ++x)
-		{
-			for(int y=0; y<Y_SIZE; ++y)
-			{
-				int i = IDX_3D(x,y,z);
-				printf("\t %3.3f",hostSpace->U[i]);
-			}
-			printf("\n");
-		}
-		printf("\ndevice:\n");
-		for(int x=0; x<X_SIZE; ++x)
-		{
-			for(int y=0; y<Y_SIZE; ++y)
-			{
-				int i = IDX_3D(x,y,z);
-				printf("\t %3.3f",deviceSpace->U[i]);
-			}
-			printf("\n");
-		}
-	}
-
+	printf("Compare results:\n\tNum of differences: %d\n",numOfDiffs);
 }
 
 void printData(float* data)

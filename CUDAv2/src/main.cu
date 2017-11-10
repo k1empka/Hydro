@@ -5,15 +5,16 @@
 #include "utils.h"
 #include "customTimer.h"
 #include "printer.h"
+#include "Fraction.h"
 
 #define RANDOM false
 #define PRINT_RESULTS false
 
-fraction* execHost()
+Fraction* execHost()
 {
 	Timer::getInstance().clear();
-	int totalSize=sizeof(fraction);
-	void* space,*result=(fraction*)malloc(totalSize);
+	int totalSize=sizeof(Fraction) * SIZE;
+	void* space,*result=(Fraction*)malloc(totalSize);
     if (NULL == result)
     {
         printf("Malloc problem!\n");
@@ -32,7 +33,7 @@ fraction* execHost()
 		{
 			swapPointers(space,result);
 		}
-		hostSimulation(space,result);
+		hostSimulation(initParams(),space,result);
 #if PRINT_RESULTS
         bytePrinter.printIteration(result, i);
 #endif
@@ -42,24 +43,24 @@ fraction* execHost()
 	Timer::getInstance().printResults();
 
 	free(space);
-	return (fraction*)result;
+	return (Fraction*)result;
 }
 
-fraction* execDeviceSurface(fraction* space)
+Fraction* execDeviceSurface(Fraction* space)
 {
-	int memSize=sizeof(float)*X_SIZE*Y_SIZE*Z_SIZE;
+	int memSize=sizeof(float)*SIZE;
 
 	// For float we could create a channel with:
 	cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc(32, 0, 0, 0,cudaChannelFormatKindFloat);
 
 	// Allocate memory in device
 	cudaArray* cuSpaceArray;
-	cudaMallocArray(&cuSpaceArray, &channelDesc, X_SIZE*Y_SIZE*Z_SIZE,cudaArraySurfaceLoadStore);
+	cudaMallocArray(&cuSpaceArray, &channelDesc, SIZE,cudaArraySurfaceLoadStore);
 	cudaArray* cuResultArray;
-	cudaMallocArray(&cuResultArray, &channelDesc, X_SIZE*Y_SIZE*Z_SIZE,cudaArraySurfaceLoadStore);
+	cudaMallocArray(&cuResultArray, &channelDesc, SIZE,cudaArraySurfaceLoadStore);
 
 	// Copy to device memory initial data
-	cudaMemcpyToArray(cuSpaceArray, 0, 0, space->U, memSize,cudaMemcpyHostToDevice);
+	cudaMemcpyToArray(cuSpaceArray, 0, 0, space, memSize,cudaMemcpyHostToDevice);
 
 	// Specify surface
 	struct cudaResourceDesc resDesc;
@@ -86,7 +87,7 @@ fraction* execDeviceSurface(fraction* space)
 		{
 			simulationSurface(resultSurfObj,spaceSurfObj);
 #if PRINT_RESULTS
-		cudaMemcpyFromArray(space->U,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+		cudaMemcpyFromArray(space,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
         bytePrinter.printIteration(space, i);
 #endif
 		}
@@ -94,13 +95,13 @@ fraction* execDeviceSurface(fraction* space)
 		{
 			simulationSurface(spaceSurfObj,resultSurfObj);
 #if PRINT_RESULTS
-		cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+		cudaMemcpyFromArray(space,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
         bytePrinter.printIteration(space, i);
 #endif
 		}
 	}
 #if !PRINT_RESULTS
-	cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+	cudaMemcpyFromArray(space,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     Timer::getInstance().stop("Device simulation time");
 	printf("Simulation completed\n");
@@ -117,22 +118,24 @@ fraction* execDeviceSurface(fraction* space)
 	return space;
 }
 
-fraction* execDevice(enum deviceSimulationType type)
+Fraction* execDevice(enum deviceSimulationType type)
 {
-	fraction* space = initSpace(RANDOM);
+	Fraction* space = initSpace(RANDOM);
 
 	if(NULL==space)
 		exit(-1);
 
-	//DUE TO PROBLEMS WITH POINTERS AND SURFACE MEMORY OBJECTS THIS KIND OF SIMULATION IS THREATED SEPARATLY
+	//DUE TO PROBLEMS WITH POINTERS AND SURFACE MEMORY OBJECTS THIS KIND OF SIMULATION IS THREATED SEPARATELY
 	if(SURFACE==type)
 		return execDeviceSurface(space);
-
-	void *d_space,*d_result;
-	int totalSize = sizeof(fraction);
+    FluidParams params = initParams();
+	void *d_space,*d_result,*d_params;
+	int totalSize = sizeof(Fraction)*SIZE;
 	cudaMalloc((void **)&d_space,totalSize);
 	cudaMalloc((void **)&d_result,totalSize);
+    cudaMalloc((void **)&d_params, sizeof(FluidParams));
 	cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_params, &params, sizeof(FluidParams), cudaMemcpyHostToDevice);
 
 #if PRINT_RESULTS
     Printer bytePrinter("device.data");
@@ -146,10 +149,12 @@ fraction* execDevice(enum deviceSimulationType type)
 		{
 			swapPointers(d_space,d_result);
 		}
-		simulation(d_space,d_result,type);
+		simulation(d_params,d_space,d_result,type);
 #if PRINT_RESULTS
         cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
         bytePrinter.printIteration(space, i);
+#else
+        cudaThreadSynchronize();
 #endif
 	}
 #if !PRINT_RESULTS
@@ -166,9 +171,9 @@ fraction* execDevice(enum deviceSimulationType type)
 int main()
 {
 	bool hostSimulationOn = true;
-	enum deviceSimulationType type = SURFACE;
+	enum deviceSimulationType type = GLOBAL;
 
-	fraction* hostOutputSpace,* deviceOutputSpace;
+	Fraction* hostOutputSpace,* deviceOutputSpace;
 
 	initCuda();
 	deviceOutputSpace = execDevice(type);

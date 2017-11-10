@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "computation.h"
+#include "Fraction.h"
 
 class Printer
 {
 public:
     Printer(const char* title);
     ~Printer();
-    void printIteration(fraction* space, int iter);
+    void printIteration(Fraction* space, int iter);
 
 private:
     FILE* f = nullptr;

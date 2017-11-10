@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "printer.h"
+#include "computation.h"
 
 Printer::Printer(const char* title)
 {
@@ -39,20 +40,14 @@ void Printer::printHeader()
     fwrite(&floatSize, size, 1, f);
 }
 
-void Printer::printIteration(fraction* space, int iter)
+void Printer::printIteration(Fraction* space, int iter)
 {
 	float v;
 	int size = sizeof(float);
 
-	for(int z=0; z<Z_SIZE;++z)
+	for(int i=0; i<SIZE;++i)
 	{
-		for(int y=0; y<Y_SIZE;++y)
-		{
-			for(int x=0; x<X_SIZE;++x)
-			{
-				v =space->U[IDX_3D(x,y,z)];
-				fwrite(&v,size,1,f);
-			}
-		}
+		v = space[i].E;
+		fwrite(&v,size,1,f);					
 	}
 }

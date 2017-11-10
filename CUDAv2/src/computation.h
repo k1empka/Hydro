@@ -1,17 +1,15 @@
 #pragma once
-
 #include <cuda_runtime.h>
+#include "Fraction.h"
 
 #define NUM_OF_ITERATIONS 100
 #define X_SIZE 10
 #define Y_SIZE 10
 #define Z_SIZE 10
+#define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
-#define DT 0.5
-#define uV 0.02 // viscosity
-#define H  1 // radius for SPH
-#define P_MASS 2 // mass - no idea about value
+
 
 #define TH_IN_BLCK_X 8
 #define TH_IN_BLCK_Y 8
@@ -28,15 +26,14 @@
  *  more info: http://matthias-mueller-fischer.ch/publications/sca03.pdf
  */
 
-struct fraction
-{
-	float  U[X_SIZE*Y_SIZE*Z_SIZE];
-	float  Vx[X_SIZE];
-	float  Vy[Y_SIZE];
-	//TODO more paramas
-};
-
 enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3D_FOR_IN,SHARED_3D_LAYER_FOR_IN};
+
+struct FluidParams
+{
+    float4 d;
+    float  omega;
+    float  mustaSteps;
+};
 
 #define cudaCheckErrors(msg) \
     do { \
@@ -50,6 +47,10 @@ enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_CUBE,SHARED_3D_LAYER,SHARED_3
         } \
     } while(0);
 
-void simulation(void* space,void* result,enum deviceSimulationType type);
-void hostSimulation(void* space,void* result);
+void simulation(void* pars, void* space,void* result,enum deviceSimulationType type);
+void hostSimulation(FluidParams* pars, void* space,void* result);
 void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData);
+
+__host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data, int3 pos);
+__device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fraction cur, Fraction zn,
+                            Fraction znn, Fraction* storage[TH_IN_BLCK_Y + 4][TH_IN_BLCK_X + 4]);

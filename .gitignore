@@ -267,3 +267,9 @@ __pycache__/
 /Cuda/results.txt
 /CUDAv2/.cproject
 .project
+/.gitattributes
+/CUDAv2/Hydro.vcxproj.filters
+/CUDAv2/device.data
+/CUDAv2/host.data
+/CUDAv2/hostResult
+/CUDAv2/result

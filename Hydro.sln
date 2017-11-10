@@ -5,10 +5,14 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hydro_CUDA", "CUDAv2\Hydro.vcxproj", "{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EmptyProject", "Visual_v2\EmptyProject_2010.vcxproj", "{D3D09108-96D0-4629-88B8-122C0256058C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Profile|x64 = Profile|x64
+		Profile|x86 = Profile|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
@@ -17,10 +21,26 @@ Global
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Debug|x64.Build.0 = Debug|x64
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Debug|x86.ActiveCfg = Debug|Win32
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Debug|x86.Build.0 = Debug|Win32
+		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Profile|x64.ActiveCfg = Release|x64
+		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Profile|x64.Build.0 = Release|x64
+		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Profile|x86.ActiveCfg = Release|Win32
+		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Profile|x86.Build.0 = Release|Win32
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Release|x64.ActiveCfg = Release|x64
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Release|x64.Build.0 = Release|x64
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Release|x86.ActiveCfg = Release|Win32
 		{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}.Release|x86.Build.0 = Release|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Debug|x64.ActiveCfg = Debug|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Debug|x64.Build.0 = Debug|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Debug|x86.ActiveCfg = Debug|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Debug|x86.Build.0 = Debug|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Profile|x64.ActiveCfg = Profile|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Profile|x64.Build.0 = Profile|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Profile|x86.ActiveCfg = Profile|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Profile|x86.Build.0 = Profile|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Release|x64.ActiveCfg = Release|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Release|x64.Build.0 = Release|x64
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Release|x86.ActiveCfg = Release|Win32
+		{D3D09108-96D0-4629-88B8-122C0256058C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
