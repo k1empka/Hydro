@@ -50,7 +50,7 @@ fraction* execDeviceSurface(fraction* space)
 	int memSize=sizeof(float)*X_SIZE*Y_SIZE*Z_SIZE;
 
 	// For float we could create a channel with:
-	cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc(32, 0, 0, 0,cudaChannelFormatKindFloat);
+	cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc<float>();
 
 	// Allocate memory in device
 	cudaArray* cuSpaceArray;
@@ -74,33 +74,30 @@ fraction* execDeviceSurface(fraction* space)
 	cudaSurfaceObject_t resultSurfObj=0;
 	cudaCreateSurfaceObject(&resultSurfObj, &resDesc);
 
+	void *resultObjPointer=&resultSurfObj,*spacetObjPointer=&spaceSurfObj;
+	int i=0;
+
 #if PRINT_RESULTS
     Printer bytePrinter("device.data");
 #endif
 	printf("Simulation started\n");
     Timer::getInstance().start("Device simulation time");
 
-	for(int i=0;i<NUM_OF_ITERATIONS;++i)
+	for(;i<NUM_OF_ITERATIONS;++i)
 	{
-		if(i%2!=0)
+		if((i % 2) != 0)
 		{
-			simulationSurface(resultSurfObj,spaceSurfObj);
-#if PRINT_RESULTS
-		cudaMemcpyFromArray(space->U,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
-        bytePrinter.printIteration(space, i);
-#endif
+			swapPointers(spacetObjPointer,resultObjPointer);
 		}
-		else
-		{
-			simulationSurface(spaceSurfObj,resultSurfObj);
-#if PRINT_RESULTS
-		cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
-        bytePrinter.printIteration(space, i);
-#endif
-		}
+		simulationSurface(*(cudaSurfaceObject_t*)spacetObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
+		#if PRINT_RESULTS
+		        if(i%2!=0) cudaMemcpyFromArray(space->U,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+		        else cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+		#endif
 	}
 #if !PRINT_RESULTS
-	cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+	if(i%2!=0) cudaMemcpyFromArray(space->U,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+	else cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     Timer::getInstance().stop("Device simulation time");
 	printf("Simulation completed\n");
