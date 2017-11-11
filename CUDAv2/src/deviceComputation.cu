@@ -124,8 +124,7 @@ __global__ void stepGlobal(FluidParams* params,Fraction* spaceData,Fraction* res
 	if(x < X_SIZE - 2 && y < Y_SIZE - 2 && z < Z_SIZE - 2 &&
        x > 1          && y > 1          && z > 1)
 	{
-        resultData[IDX_3D(x, y, z)] = Fraction();
-//        resultData[IDX_3D(x, y, z)] = result3D(params, spaceData, make_int3(x, y, z));
+        resultData[IDX_3D(x, y, z)] = result3D(params, spaceData, make_int3(x, y, z));
 	}
 }
 

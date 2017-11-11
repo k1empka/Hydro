@@ -85,7 +85,7 @@ Fraction* execDeviceSurface(Fraction* space)
 
 	for(int i=0;i<NUM_OF_ITERATIONS;++i)
 	{
-		if(i%2!=0)
+		if(i % 2 != 0)
 		{
 			simulationSurface(resultSurfObj,spaceSurfObj);
 #if PRINT_RESULTS
@@ -185,9 +185,9 @@ int main()
 	if(hostSimulationOn)
 	{
 		hostOutputSpace = execHost();
+		compare_results(hostOutputSpace,deviceOutputSpace);
+		free(hostOutputSpace);
 	}
-   // compare_results(hostOutputSpace,deviceOutputSpace);
-	//free(hostOutputSpace);
 	free(deviceOutputSpace);
 	return 0;
 }

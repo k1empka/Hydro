@@ -304,24 +304,25 @@ __device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fracti
 {
     Fraction result = cur;
 
-    {
-        // update in Z dimension
-        result = result + fluidAlgorithm(eDim::z, pars, zpp, zp, cur, zn, znn);
+    // update in Z dimension
+    result = result + fluidAlgorithm(eDim::z, pars, zpp, zp, cur, zn, znn);
 
-        Fraction xpp = storage[threadIdx.x - 2][threadIdx.y],
-            xp = storage[threadIdx.x - 1][threadIdx.y],
-            xn = storage[threadIdx.x + 1][threadIdx.y],
-            xnn = storage[threadIdx.x + 2][threadIdx.y];
+    int idx = threadIdx.x + 2, idy = threadIdx.y + 2;
+    {
+        Fraction xpp = storage[idx - 2][idy],
+            xp = storage[idx - 1][idy],
+            xn = storage[idx + 1][idy],
+            xnn = storage[idx + 2][idy];
 
         result = result + fluidAlgorithm(eDim::x, pars, xpp, xp, cur, xn, xnn);
     }
     {
         // update in Y dimension
         // fetch Y neighbours from shared memory
-        Fraction ypp = storage[threadIdx.x][threadIdx.y - 2],
-            yp = storage[threadIdx.x][threadIdx.y - 1],
-            yn = storage[threadIdx.x][threadIdx.y + 1],
-            ynn = storage[threadIdx.x][threadIdx.y + 2];
+        Fraction ypp = storage[idx][idy - 2],
+            yp = storage[idx][idy - 1],
+            yn = storage[idx][idy + 1],
+            ynn = storage[idx][idy + 2];
 
         result = result + fluidAlgorithm(eDim::y, pars, ypp, yp, cur, yn, ynn);
     }
