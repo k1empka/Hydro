@@ -124,16 +124,17 @@ __global__ void stepGlobal(FluidParams* params,Fraction* spaceData,Fraction* res
 	if(x < X_SIZE - 2 && y < Y_SIZE - 2 && z < Z_SIZE - 2 &&
        x > 1          && y > 1          && z > 1)
 	{
-        resultData[IDX_3D(x, y, z)] = result3D(params, spaceData, make_int3(x, y, z));
+        resultData[IDX_3D(x, y, z)] = Fraction();
+//        resultData[IDX_3D(x, y, z)] = result3D(params, spaceData, make_int3(x, y, z));
 	}
 }
 
 __global__ void stepSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
 {
-	const int x = blockIdx.x * blockDim.x + threadIdx.x;
+	/*const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	const int z = blockIdx.z * blockDim.z + threadIdx.z;
-    /*
+    
 	if(x<X_SIZE && y<Y_SIZE && z<Z_SIZE)
 	{
 		const int idx = IDX_3D(x,y,z);
@@ -212,11 +213,6 @@ int blockSizeOf(unsigned size,unsigned thdsInBlock)
 	return ceil(float(size) / float(thdsInBlock));
 }
 
-unsigned int calcSharedSize(dim3 thds)
-{
-	return sizeof(float) * (thds.x + 4) * (thds.y + 4) ;
-}
-
 void printOnce(char* text)
 {
 	static std::once_flag flag;
@@ -248,11 +244,10 @@ void simulationShared3dLayer(FluidParams* d_params, Fraction* d_space, Fraction*
 	static dim3 thds(TH_IN_BLCK_X, TH_IN_BLCK_Y);
 	static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
 					      blockSizeOf(Y_SIZE,thds.y));
-	static auto	shMemSize = calcSharedSize(thds);
 	printOnce("Shared Layer by Layer\n");
 
     for (int z = 2; z < Z_SIZE - 2; ++z)
-		stepShared3DLayer<<<numBlocks, thds,shMemSize>>>(d_params,d_space,d_result,z);
+		stepShared3DLayer<<<numBlocks, thds>>>(d_params,d_space,d_result,z);
 
 }
 
@@ -261,10 +256,9 @@ void simulationShared3dLayerForIn(FluidParams* d_params, Fraction* d_space, Frac
 	static dim3 thds(TH_IN_BLCK_X, TH_IN_BLCK_Y);
 	static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
 					      blockSizeOf(Y_SIZE,thds.y));
-	static auto	shMemSize = calcSharedSize(thds);
 	printOnce("Shared Layer by Layer for inside kernel\n");
 
-	stepShared3DLayerForIn<<<numBlocks, thds,shMemSize>>>(d_params,d_space,d_result);
+	stepShared3DLayerForIn<<<numBlocks, thds>>>(d_params,d_space,d_result);
 
 }
 

@@ -27,14 +27,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
-    <ClCompile Include="src\Fraction.cu" />
     <ClCompile Include="src\hostComputation.cpp" />
     <ClCompile Include="src\printer.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\computation.cu" />
-    <CudaCompile Include="src\deviceComputation.cu" />
+    <CudaCompile Include="src\deviceComputation.cu">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </CudaCompile>
     <CudaCompile Include="src\main.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

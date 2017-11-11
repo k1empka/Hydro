@@ -240,7 +240,7 @@ __host__ __device__ Fraction mustaForce(eDim dim, FluidParams* pars, Fraction L0
 }
 
 __host__ __device__ Fraction fluidAlgorithm(eDim dim, FluidParams* pars, Fraction pp, Fraction p,
-                                                               Fraction c,  Fraction n, Fraction nn)
+                                                             Fraction c,  Fraction n, Fraction nn)
 {
     REAL dx;
 
@@ -276,7 +276,6 @@ __host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data,int3 pos
 {
     Fraction cur;
     Fraction result = cur = data[IDX_3D(pos.x, pos.y, pos.z)];
-
     {
         Fraction xpp = data[IDX_3D(pos.x - 2, pos.y, pos.z)],
             xp = data[IDX_3D(pos.x - 1, pos.y, pos.z)],
@@ -301,7 +300,7 @@ __host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data,int3 pos
     return result;
 }
 __device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fraction cur, Fraction zn,
-    Fraction znn, Fraction storage[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4])
+                            Fraction znn, Fraction storage[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4])
 {
     Fraction result = cur;
 
@@ -315,7 +314,8 @@ __device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fracti
             xnn = storage[threadIdx.x + 2][threadIdx.y];
 
         result = result + fluidAlgorithm(eDim::x, pars, xpp, xp, cur, xn, xnn);
-
+    }
+    {
         // update in Y dimension
         // fetch Y neighbours from shared memory
         Fraction ypp = storage[threadIdx.x][threadIdx.y - 2],

@@ -40,7 +40,6 @@ void initCuda()
 Fraction* initSpace(const bool random)
 {
     Fraction* space = new Fraction[SIZE];
-
 	if(NULL==space)
 	{
 		printf("memory allocation error\n");

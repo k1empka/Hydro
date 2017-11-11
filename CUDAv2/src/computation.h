@@ -3,15 +3,15 @@
 
 #include "Fraction.h"
 
-#define NUM_OF_ITERATIONS 100
-#define X_SIZE 10
-#define Y_SIZE 10
-#define Z_SIZE 10
+#define NUM_OF_ITERATIONS 10
+#define X_SIZE 100
+#define Y_SIZE 100
+#define Z_SIZE 100
 #define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 98
 
-
+  
 #define TH_IN_BLCK_X 8
 #define TH_IN_BLCK_Y 8
 #define TH_IN_BLCK_Z 8
@@ -19,7 +19,7 @@
 #define THX_2D(x,y) ((y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
 #define THX_3D(x,y,z) ((z) * ((TH_IN_BLCK_Y+NUM_NEIGH) * (TH_IN_BLCK_X+NUM_NEIGH)) + (y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
 #define IDX_2D(x,y) ((y) * X_SIZE + x)
-#define IDX_3D(x,y,z) ((z) * (Y_SIZE * X_SIZE) +(y )* X_SIZE + x)
+#define IDX_3D(x,y,z) ((z) * (Y_SIZE * X_SIZE) + y * X_SIZE + x)
 
 /*
  *

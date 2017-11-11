@@ -37,7 +37,7 @@ Fraction* execHost()
 		}
 		hostSimulation(&params,space,result);
 #if PRINT_RESULTS
-        bytePrinter.printIteration(result, i);
+        bytePrinter.printIteration((Fraction*)result, i);
 #endif
 	}
     Timer::getInstance().stop("Host simulation time");
@@ -136,9 +136,10 @@ Fraction* execDevice(enum deviceSimulationType type)
 	cudaMalloc((void **)&d_space,totalSize);
 	cudaMalloc((void **)&d_result,totalSize);
     cudaMalloc((void **)&d_params, sizeof(FluidParams));
+    cudaCheckErrors("Mallocs");
 	cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
     cudaMemcpy(d_params, &params, sizeof(FluidParams), cudaMemcpyHostToDevice);
-
+    cudaCheckErrors("Copy mem");
 #if PRINT_RESULTS
     Printer bytePrinter("device.data");
 #endif
@@ -166,13 +167,14 @@ Fraction* execDevice(enum deviceSimulationType type)
 	printf("Simulation completed\n");
 	Timer::getInstance().printResults();
 
+    cudaFree(d_params);
 	cudaFree(d_space);
 	cudaFree(d_result);
 	return space;
 }
 int main()
 {
-	bool hostSimulationOn = true;
+	bool hostSimulationOn = false;
 	enum deviceSimulationType type = GLOBAL;
 
 	Fraction* hostOutputSpace,* deviceOutputSpace;
@@ -184,8 +186,8 @@ int main()
 	{
 		hostOutputSpace = execHost();
 	}
-    compare_results(hostOutputSpace,deviceOutputSpace);
-	free(hostOutputSpace);
+   // compare_results(hostOutputSpace,deviceOutputSpace);
+	//free(hostOutputSpace);
 	free(deviceOutputSpace);
 	return 0;
 }
