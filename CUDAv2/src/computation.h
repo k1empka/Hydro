@@ -3,7 +3,7 @@
 
 #include "Fraction.h"
 
-#define NUM_OF_ITERATIONS 3
+#define NUM_OF_ITERATIONS 10
 #define X_SIZE 100
 #define Y_SIZE 100
 #define Z_SIZE 100

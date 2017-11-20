@@ -15,9 +15,9 @@
 FluidParams initParams()
 {
     FluidParams params;
-    params.d = make_float4(1, 1, 1, 1);
-    params.omega = 1;
-    params.mustaSteps = 10;
+    params.d = make_float4(0.1, 0.1, 0.1, 0.04);
+    params.omega = 0;
+    params.mustaSteps = 4;
     return params;
 }
 
