@@ -128,7 +128,20 @@ __global__ void stepGlobal(FluidParams* params,Fraction* spaceData,Fraction* res
     }
 }
 
-__global__ void stepSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
+__device__ void writeSurface(Fraction f,cudaSurfaceObject_t data,const int idx)
+{
+
+	static const int SIZE_OF_FLOAT = sizeof(float);
+
+	surf2Dwrite((f.E), data, SIZE_OF_FLOAT*(5*idx),  0);
+	surf2Dwrite((f.R), data, SIZE_OF_FLOAT*(5*idx+1),0);
+	surf2Dwrite((f.Vx),data, SIZE_OF_FLOAT*(5*idx+2),0);
+	surf2Dwrite((f.Vy),data, SIZE_OF_FLOAT*(5*idx+3),0);
+	surf2Dwrite((f.Vz),data, SIZE_OF_FLOAT*(5*idx+2),0);
+
+}
+
+__global__ void stepSurface(FluidParams* params,cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
 {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -138,9 +151,9 @@ __global__ void stepSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t re
         x > 1 && y > 1 && z > 1) 
     {
         const int idx = IDX_3D(x,y,z);
+        const Fraction output = result3DSurface(params,spaceData,make_int3(x, y, z));
 
-    /*	surf2Dread(&data,  spaceData, 4*idx,0);
-        surf2Dwrite(resultCell, resultData, 4*idx,0);*/
+        writeSurface(output,resultData,idx);
     }
 }
 
@@ -165,14 +178,14 @@ void simulationGlobal(FluidParams* d_params,Fraction* d_space,Fraction* d_result
     stepGlobal<<<numBlocks, thds>>>(d_params,d_space,d_result);
 }
 
-void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
+void simulationSurface(FluidParams* params,cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData)
 {
     static dim3 thds(TH_IN_BLCK_X, TH_IN_BLCK_Y,TH_IN_BLCK_Z);
     static dim3 numBlocks(blockSizeOf(X_SIZE,thds.x),
                           blockSizeOf(Y_SIZE,thds.y),
                           blockSizeOf(Z_SIZE,thds.z));
     printOnce("Surface\n");
-    stepSurface<<<numBlocks, thds>>>(spaceData,resultData);
+    stepSurface<<<numBlocks, thds>>>(params,spaceData,resultData);
 }
 
 void simulationShared3dLayer(FluidParams* d_params, Fraction* d_space, Fraction* d_result)
@@ -198,18 +211,18 @@ void simulationShared3dLayerForIn(FluidParams* d_params, Fraction* d_space, Frac
 
 }
 
-void simulation(void* pars, void* space,void* result,enum deviceSimulationType type)
+void simulation(FluidParams* pars, void* space,void* result,enum deviceSimulationType type)
 {
     switch(type)
     {
     case GLOBAL:
-        simulationGlobal((FluidParams*)pars,(Fraction*)space,(Fraction*)result);
+        simulationGlobal(pars,(Fraction*)space,(Fraction*)result);
         break;
     case SHARED_3D_LAYER:
-        simulationShared3dLayer((FluidParams*)pars, (Fraction*)space,(Fraction*)result);
+        simulationShared3dLayer(pars, (Fraction*)space,(Fraction*)result);
         break;
     case SHARED_3D_LAYER_FOR_IN:
-        simulationShared3dLayerForIn((FluidParams*)pars, (Fraction*)space,(Fraction*)result);
+        simulationShared3dLayerForIn(pars, (Fraction*)space,(Fraction*)result);
         break;
     }
     cudaCheckErrors("step failed!");

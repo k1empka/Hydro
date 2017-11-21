@@ -48,21 +48,22 @@ Fraction* execHost()
     return (Fraction*)result;
 }
 
-Fraction* execDeviceSurface(Fraction* space)
+Fraction* execDeviceSurface(FluidParams* params,Fraction* space)
 {
-    int memSize=sizeof(Fraction)*SIZE;
+    const int memSize=sizeof(float)*SIZE*5;
+    float* floats =spaceToFloats(space);
 
     // For float we could create a channel with:
-    cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc<Fraction>();
+    cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc<float>();
 
     // Allocate memory in device
     cudaArray* cuSpaceArray;
-    cudaMallocArray(&cuSpaceArray, &channelDesc, SIZE,cudaArraySurfaceLoadStore);
+    cudaMallocArray(&cuSpaceArray, &channelDesc, SIZE*5,cudaArraySurfaceLoadStore);
     cudaArray* cuResultArray;
-    cudaMallocArray(&cuResultArray, &channelDesc, SIZE,cudaArraySurfaceLoadStore);
+    cudaMallocArray(&cuResultArray, &channelDesc, SIZE*5,cudaArraySurfaceLoadStore);
 
     // Copy to device memory initial data
-    cudaMemcpyToArray(cuSpaceArray, 0, 0, space, memSize,cudaMemcpyHostToDevice);
+    cudaMemcpyToArray(cuSpaceArray, 0, 0, floats, memSize,cudaMemcpyHostToDevice);
 
     // Specify surface
     struct cudaResourceDesc resDesc;
@@ -92,19 +93,19 @@ Fraction* execDeviceSurface(Fraction* space)
         {
             swapPointers(spacetObjPointer,resultObjPointer);
         }
-        simulationSurface(*(cudaSurfaceObject_t*)spacetObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
+        simulationSurface(params,*(cudaSurfaceObject_t*)spacetObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
 #if PRINT_RESULTS
         if(i % 2 != 0) 
-            cudaMemcpyFromArray(space,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+            cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
         else 
-            cudaMemcpyFromArray(space,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+            cudaMemcpyFromArray(floats,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     }
 #if !PRINT_RESULTS
     if(i%2!=0) 
-        cudaMemcpyFromArray(space->U,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+        cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
     else 
-        cudaMemcpyFromArray(space->U,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+        cudaMemcpyFromArray(floats,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     Timer::getInstance().stop("Device simulation time");
     printf("Simulation completed\n");
@@ -118,28 +119,33 @@ Fraction* execDeviceSurface(Fraction* space)
     cudaFreeArray(cuSpaceArray);
     cudaFreeArray(cuResultArray);
 
+    floatsToSpace(floats,space);
+
+    //free temporary memory
+    free(floats);
+
     return space;
 }
 
 Fraction* execDevice(enum deviceSimulationType type)
 {
     Fraction* space = initSpace(RANDOM);
+    FluidParams *d_params,params = initParams();
+    cudaMalloc((void **)&d_params, sizeof(FluidParams));
+    cudaMemcpy(d_params, &params, sizeof(FluidParams), cudaMemcpyHostToDevice);
 
     if(NULL==space)
         exit(-1);
 
     //DUE TO PROBLEMS WITH POINTERS AND SURFACE MEMORY OBJECTS THIS KIND OF SIMULATION IS THREATED SEPARATELY
     if(SURFACE==type)
-        return execDeviceSurface(space);
-    FluidParams params = initParams();
-    void *d_space,*d_result,*d_params;
+        return execDeviceSurface(d_params,space);
+    void *d_space,*d_result;
     int totalSize = sizeof(Fraction)*SIZE;
     cudaMalloc((void **)&d_space,totalSize);
     cudaMalloc((void **)&d_result,totalSize);
-    cudaMalloc((void **)&d_params, sizeof(FluidParams));
     cudaCheckErrors("Mallocs");
     cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_params, &params, sizeof(FluidParams), cudaMemcpyHostToDevice);
     cudaCheckErrors("Copy mem");
 #if PRINT_RESULTS
     Printer bytePrinter("device.data");
@@ -176,7 +182,7 @@ Fraction* execDevice(enum deviceSimulationType type)
 int main()
 {
     bool hostSimulationOn = true;
-    enum deviceSimulationType type = GLOBAL;
+    enum deviceSimulationType type = SURFACE;
 
     Fraction* hostOutputSpace,* deviceOutputSpace;
 

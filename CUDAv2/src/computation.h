@@ -48,10 +48,12 @@ struct FluidParams
         } \
     } while(0);
 
-void simulation(void* pars, void* space,void* result,enum deviceSimulationType type);
-void hostSimulation(FluidParams* pars, void* space,void* result);
-void simulationSurface(cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData);
+void simulation(FluidParams* params, void* space,void* result,enum deviceSimulationType type);
+void hostSimulation(FluidParams* params, void* space,void* result);
+void simulationSurface(FluidParams* params,cudaSurfaceObject_t spaceData,cudaSurfaceObject_t resultData);
+
 
 __host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data, int3 pos);
+__device__ Fraction result3DSurface(FluidParams* pars, cudaSurfaceObject_t data, int3 pos);
 __device__ Fraction resultZ(FluidParams* pars, Fraction zpp, Fraction zp, Fraction cur, Fraction zn,
                             Fraction znn, Fraction storage[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4]);

@@ -9,3 +9,5 @@ FluidParams initParams();
 void  	    swapPointers(void*& p1, void*& p2);
 void        compare_results(Fraction* hostSpace,Fraction* deviceSpace);
 void        printData(float* data);
+float* 		spaceToFloats(Fraction* space);
+void 		floatsToSpace(float* floats,Fraction* space);
