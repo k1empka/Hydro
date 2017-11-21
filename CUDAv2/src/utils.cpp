@@ -129,5 +129,38 @@ void printData(float* data)
 	printf("\n");
 }
 
+float* spaceToFloats(Fraction* space)
+{
+    float* spaceFloats = (float*)(malloc(sizeof(float)*SIZE*5));
+	if(NULL==spaceFloats)
+	{
+		printf("memory allocation error\n");
+		return NULL;
+	}
+
+	for(int i=0; i<SIZE;++i)
+	{
+		spaceFloats[5*i] = space[i].E;
+		spaceFloats[5*i+1]=space[i].R;
+		spaceFloats[5*i+2]=space[i].Vx;
+		spaceFloats[5*i+3]=space[i].Vy;
+		spaceFloats[5*i+4]=space[i].Vz;
+	}
+
+	return spaceFloats;
+}
+
+void floatsToSpace(float* floats,Fraction* space)
+{
+	for(int i=0; i<SIZE;++i)
+	{
+		space[i].E = floats[5*i];
+		space[i].R = floats[5*i+1];
+		space[i].Vx= floats[5*i+2];
+		space[i].Vy= floats[5*i+3];
+		space[i].Vz= floats[5*i+4];
+	}
+}
+
 
 
