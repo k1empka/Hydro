@@ -55,9 +55,7 @@ Fraction* initSpace(const bool random)
     const int Y_MID = Y_SIZE / 2;
     const int Z_MID = Z_SIZE / 2;
 
-    space[IDX_3D(X_MID, Y_MID, Z_MID)] = Fraction(100,100,make_float3(5.,0.,0.));
-
-/*	const float SPACE_FACTOR = .2;
+	const float SPACE_FACTOR = .2;
 	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
 	const int X_SPACE = (int)ceil(X_SIZE*SPACE_FACTOR);
 	const int Y_SPACE = (int)ceil(Y_SIZE*SPACE_FACTOR);
@@ -76,14 +74,11 @@ Fraction* initSpace(const bool random)
 				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
 
 				//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
-				space[idx]= (float) ((true == random) ? (rand()%MAX_START_FORCE + 1) : (MAX_START_FORCE));
-
-				// We don't use it for now
-				//space->Vx[X_PLACE+x]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.05;
-				//space->Vy[Y_PLACE+y]= (float)(rand()%MAX_START_FORCE + 1 - MAX_START_FORCE/2) * 0.01;
+                space[idx] = (random) ? Fraction(rand() % MAX_START_FORCE + 1, rand() % MAX_START_FORCE + 1, make_float3(MAX_VELOCITY%rand(), 0, 0)) :
+                                        Fraction(MAX_START_FORCE, MAX_START_FORCE, make_float3(MAX_VELOCITY, 0, 0));
 			}
 		}
-	}*/
+	}
 
 	return space;
 }
@@ -105,6 +100,8 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 
 	for(int i=0; i<SIZE; ++i)
 	{
+        auto const& h = hostSpace[i];
+        auto const& d = deviceSpace[i];
 		if(hostSpace[i].E != deviceSpace[i].E)
 		{
             numOfDiffs++;

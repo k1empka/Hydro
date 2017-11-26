@@ -137,7 +137,7 @@ __device__ void writeSurface(Fraction f,cudaSurfaceObject_t data,const int idx)
 	surf2Dwrite((f.R), data, SIZE_OF_FLOAT*(5*idx+1),0);
 	surf2Dwrite((f.Vx),data, SIZE_OF_FLOAT*(5*idx+2),0);
 	surf2Dwrite((f.Vy),data, SIZE_OF_FLOAT*(5*idx+3),0);
-	surf2Dwrite((f.Vz),data, SIZE_OF_FLOAT*(5*idx+2),0);
+	surf2Dwrite((f.Vz),data, SIZE_OF_FLOAT*(5*idx+4),0);
 
 }
 

@@ -11,7 +11,8 @@ void hostSimulation(FluidParams* pars,void* spaceData, void* resultData)
 		{
 			for(int x=2; x<X_SIZE-2;++x)
 			{
-                resultFraction[IDX_3D(x,y,z)] = result3D(pars,spaceFraction,make_int3(x,y,z));
+                auto const& f = result3D(pars, spaceFraction, make_int3(x, y, z));
+                resultFraction[IDX_3D(x, y, z)] = f;
 			}
 		}
 	}

@@ -15,7 +15,7 @@ Fraction* execHost()
 {
     Timer::getInstance().clear();
     int totalSize=sizeof(Fraction) * SIZE;
-    void* space,*result=(Fraction*)malloc(totalSize);
+    void* space,*result= new Fraction[totalSize];
     auto params = initParams();
     if (NULL == result)
     {
@@ -182,7 +182,7 @@ Fraction* execDevice(enum deviceSimulationType type)
 int main()
 {
     bool hostSimulationOn = true;
-    enum deviceSimulationType type = SURFACE;
+    enum deviceSimulationType type = GLOBAL;
 
     Fraction* hostOutputSpace,* deviceOutputSpace;
 

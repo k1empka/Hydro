@@ -4,12 +4,13 @@
 #include "Fraction.h"
 
 #define NUM_OF_ITERATIONS 10
-#define X_SIZE 100
-#define Y_SIZE 100
-#define Z_SIZE 100
+#define X_SIZE 40
+#define Y_SIZE 40
+#define Z_SIZE 40
 #define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
-#define MAX_START_FORCE 98
+#define MAX_START_FORCE 100
+#define MAX_VELOCITY 10
 
   
 #define TH_IN_BLCK_X 8

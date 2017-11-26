@@ -311,7 +311,7 @@ __device__ Fraction readFraction(cudaSurfaceObject_t data,const int idx)
 	surf2Dread(&(f.R), data, SIZE_OF_FLOAT*(5*idx+1),0);
 	surf2Dread(&(f.Vx),data, SIZE_OF_FLOAT*(5*idx+2),0);
 	surf2Dread(&(f.Vy),data, SIZE_OF_FLOAT*(5*idx+3),0);
-	surf2Dread(&(f.Vz),data, SIZE_OF_FLOAT*(5*idx+2),0);
+	surf2Dread(&(f.Vz),data, SIZE_OF_FLOAT*(5*idx+4),0);
 
 	return f;
 }
@@ -343,7 +343,7 @@ __device__ Fraction result3DSurface(FluidParams* pars, cudaSurfaceObject_t data,
     {
         Fraction zpp,zp,zn,znn;
         zpp=readFraction(data,IDX_3D(pos.x, pos.y, pos.z - 2));
-		zp =readFraction(data,IDX_3D(pos.x , pos.y, pos.z - 1));
+		zp =readFraction(data,IDX_3D(pos.x, pos.y, pos.z - 1));
 		zn =readFraction(data,IDX_3D(pos.x, pos.y, pos.z + 1));
 		znn=readFraction(data,IDX_3D(pos.x, pos.y, pos.z + 2));
         result = result + fluidAlgorithm(eDim::z, pars, zpp, zp, cur, zn, znn);
