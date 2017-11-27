@@ -72,9 +72,7 @@
     <ClInclude Include="DXUT\Optional\SDKmisc.h">
       <Filter>DXUT</Filter>
     </ClInclude>
-    <ClInclude Include="MapReader.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
+    <ClInclude Include="MapReader.h" />
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">

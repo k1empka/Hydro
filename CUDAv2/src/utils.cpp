@@ -98,14 +98,21 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 	int numOfDiffs=0;
 	bool firstDiff = true;
 
-	for(int i=0; i<SIZE; ++i)
-	{
-        auto const& h = hostSpace[i];
-        auto const& d = deviceSpace[i];
-		if(hostSpace[i].E != deviceSpace[i].E)
-		{
-            numOfDiffs++;
-		}	
+    for (int z = 2; z<Z_SIZE - 2; ++z)
+    {
+        for (int y = 2; y < Y_SIZE - 2; ++y)
+        {
+            for (int x = 2; x < X_SIZE - 2; ++x)
+            {
+                int i = IDX_3D(x, y, z);
+                auto const& h = hostSpace[i];
+                auto const& d = deviceSpace[i];
+                if (hostSpace[i].E != deviceSpace[i].E)
+                {
+                    numOfDiffs++;
+                }
+            }
+        }
 	}
 
 	printf("Compare results:\n\tNum of differences: %d\n",numOfDiffs);

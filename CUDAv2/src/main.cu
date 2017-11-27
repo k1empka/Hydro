@@ -142,10 +142,14 @@ Fraction* execDevice(enum deviceSimulationType type)
         return execDeviceSurface(d_params,space);
     void *d_space,*d_result;
     int totalSize = sizeof(Fraction)*SIZE;
+    void *result = new Fraction[totalSize];
+
     cudaMalloc((void **)&d_space,totalSize);
     cudaMalloc((void **)&d_result,totalSize);
     cudaCheckErrors("Mallocs");
     cudaMemcpy(d_space,space,totalSize, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_result, result, totalSize, cudaMemcpyHostToDevice);
+
     cudaCheckErrors("Copy mem");
 #if PRINT_RESULTS
     Printer bytePrinter("device.data");

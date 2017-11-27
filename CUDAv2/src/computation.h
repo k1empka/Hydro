@@ -13,9 +13,9 @@
 #define MAX_VELOCITY 10
 
   
-#define TH_IN_BLCK_X 8
-#define TH_IN_BLCK_Y 8
-#define TH_IN_BLCK_Z 8
+#define TH_IN_BLCK_X 4
+#define TH_IN_BLCK_Y 4
+#define TH_IN_BLCK_Z 4
 #define NUM_NEIGH 4 // neighbours number affected for single cell in row
 #define THX_2D(x,y) ((y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
 #define THX_3D(x,y,z) ((z) * ((TH_IN_BLCK_Y+NUM_NEIGH) * (TH_IN_BLCK_X+NUM_NEIGH)) + (y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)
