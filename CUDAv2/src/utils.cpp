@@ -97,6 +97,7 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 	float diffMax=0,diffMin=0;
 	int numOfDiffs=0;
 	bool firstDiff = true;
+    float eps = 0.001;
 
     for (int z = 2; z<Z_SIZE - 2; ++z)
     {
@@ -107,7 +108,8 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
                 int i = IDX_3D(x, y, z);
                 auto const& h = hostSpace[i];
                 auto const& d = deviceSpace[i];
-                if (hostSpace[i].E != deviceSpace[i].E)
+                float err = fabs(hostSpace[i].E - deviceSpace[i].E);
+                if (err > eps)
                 {
                     numOfDiffs++;
                 }
