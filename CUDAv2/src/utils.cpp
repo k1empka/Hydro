@@ -50,33 +50,23 @@ Fraction* initSpace(const bool random)
 	if(true==random)
 		srand(time(NULL));
 
-
-    const int X_MID = X_SIZE / 2;
-    const int Y_MID = Y_SIZE / 2;
-    const int Z_MID = Z_SIZE / 2;
-
-	const float SPACE_FACTOR = .2;
-	const int Z_SPACE = (int)ceil(Z_SIZE*SPACE_FACTOR);
-	const int X_SPACE = (int)ceil(X_SIZE*SPACE_FACTOR);
-	const int Y_SPACE = (int)ceil(Y_SIZE*SPACE_FACTOR);
-
-	const float PLACE_FACTOR = 0.4;
-	const int Z_PLACE = (int)ceil(Z_SIZE*PLACE_FACTOR);
-	const int X_PLACE = (int)ceil(X_SIZE*PLACE_FACTOR);
-	const int Y_PLACE = (int)ceil(Y_SIZE*PLACE_FACTOR);
-
-	for(int z=0;z<Z_SPACE;++z)
+	for(int i=0; i<SIZE;++i)
 	{
-		for(int x=0; x<X_SPACE; ++x)
+		if(true==random)
 		{
-			for(int y=0; y<Y_SPACE; ++y)
-			{
-				int idx = IDX_3D(X_PLACE+x,Y_PLACE+y,Z_PLACE+z);
-
-				//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFRENT RESULT EACH TIME
-                space[idx] = (random) ? Fraction(rand() % MAX_START_FORCE + 1, rand() % MAX_START_FORCE + 1, make_float3(MAX_VELOCITY%rand(), 0, 0)) :
-                                        Fraction(MAX_START_FORCE, MAX_START_FORCE, make_float3(MAX_VELOCITY, 0, 0));
-			}
+			space[i].E = (float)(rand() % MAX_START_FORCE + 1);
+			space[i].R = (float)(rand() % MAX_START_FORCE + 1);
+			space[i].Vx= (float)(MAX_VELOCITY%rand());
+			space[i].Vy= 0.0f;
+			space[i].Vz= 0.0f;
+		}
+		else
+		{
+			space[i].E = (float)MAX_START_FORCE;
+			space[i].R = (float)MAX_START_FORCE;
+			space[i].Vx= (float)MAX_VELOCITY;
+			space[i].Vy= 0.0f;
+			space[i].Vz= 0.0f;
 		}
 	}
 
@@ -120,19 +110,14 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 	printf("Compare results:\n\tNum of differences: %d\n",numOfDiffs);
 }
 
-void printData(float* data)
+void printData(Fraction* space)
 {
 	printf("Data:\n");
 
-	for(int y = 0;y < Y_SIZE;++y)
+	for(int i=0; i<SIZE;++i)
 	{
-		for(int x = 0;x < X_SIZE;++x)
-		{
-			printf("%1f  ",data[IDX_3D(x,y,0)]);
-		}
-		printf("\n");
+		printf("id:%d\tE:%f\tR:%f\tVx:%f\tVy:%f\tVz:%f\n",i,space[i].E,space[i].R,space[i].Vx,space[i].Vy,space[i].Vz);
 	}
-	printf("\n");
 }
 
 float* spaceToFloats(Fraction* space)
@@ -151,6 +136,8 @@ float* spaceToFloats(Fraction* space)
 		spaceFloats[5*i+2]=space[i].Vx;
 		spaceFloats[5*i+3]=space[i].Vy;
 		spaceFloats[5*i+4]=space[i].Vz;
+
+		//printf("id:%d\tE:%f\tR:%d\tVx:%f\tVy:%f\tVz:%f\n",i,space[i].E,space[i].R,space[i].Vx,space[i].Vy,space[i].Vz);
 	}
 
 	return spaceFloats;

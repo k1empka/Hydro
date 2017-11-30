@@ -4,17 +4,17 @@
 #include "Fraction.h"
 
 #define NUM_OF_ITERATIONS 10
-#define X_SIZE 40
-#define Y_SIZE 40
-#define Z_SIZE 40
+#define X_SIZE 10
+#define Y_SIZE 10
+#define Z_SIZE 10
 #define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 100
 #define MAX_VELOCITY 10
 
   
-#define TH_IN_BLCK_X 4
-#define TH_IN_BLCK_Y 4
+#define TH_IN_BLCK_X 8
+#define TH_IN_BLCK_Y 8
 #define TH_IN_BLCK_Z 4
 #define NUM_NEIGH 4 // neighbours number affected for single cell in row
 #define THX_2D(x,y) ((y) * (TH_IN_BLCK_X+NUM_NEIGH) + x)

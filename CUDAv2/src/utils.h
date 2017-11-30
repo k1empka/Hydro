@@ -8,6 +8,6 @@ Fraction*   initSpace(const bool random);
 FluidParams initParams();
 void  	    swapPointers(void*& p1, void*& p2);
 void        compare_results(Fraction* hostSpace,Fraction* deviceSpace);
-void        printData(float* data);
+void 		printData(Fraction* space);
 float* 		spaceToFloats(Fraction* space);
 void 		floatsToSpace(float* floats,Fraction* space);

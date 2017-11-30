@@ -9,7 +9,7 @@
 #include "Fraction.h"
 
 #define RANDOM false
-#define PRINT_RESULTS true
+#define PRINT_RESULTS false
 
 Fraction* execHost()
 {
@@ -186,7 +186,7 @@ Fraction* execDevice(enum deviceSimulationType type)
 int main()
 {
     bool hostSimulationOn = true;
-    enum deviceSimulationType type = GLOBAL;
+    enum deviceSimulationType type = SURFACE;
 
     Fraction* hostOutputSpace,* deviceOutputSpace;
 
@@ -197,6 +197,7 @@ int main()
     {
         hostOutputSpace = execHost();
         compare_results(hostOutputSpace,deviceOutputSpace);
+
         free(hostOutputSpace);
     }
     free(deviceOutputSpace);
