@@ -136,8 +136,6 @@ float* spaceToFloats(Fraction* space)
 		spaceFloats[5*i+2]=space[i].Vx;
 		spaceFloats[5*i+3]=space[i].Vy;
 		spaceFloats[5*i+4]=space[i].Vz;
-
-		//printf("id:%d\tE:%f\tR:%d\tVx:%f\tVy:%f\tVz:%f\n",i,space[i].E,space[i].R,space[i].Vx,space[i].Vy,space[i].Vz);
 	}
 
 	return spaceFloats;

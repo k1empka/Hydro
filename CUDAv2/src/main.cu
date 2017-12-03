@@ -14,7 +14,7 @@
 Fraction* execHost()
 {
     Timer::getInstance().clear();
-    int totalSize=sizeof(Fraction) * SIZE;
+    int totalSize=sizeof(Fraction) * SIZE, i;
     void* space,*result= new Fraction[totalSize];
     auto params = initParams();
     if (NULL == result)
@@ -29,23 +29,31 @@ Fraction* execHost()
 #endif
     printf("Host simulation started\n");
     Timer::getInstance().start("Host simulation time");
-    for(int i=0;i<NUM_OF_ITERATIONS;++i)
+    for(i=0;i<NUM_OF_ITERATIONS;++i)
     {
-        if((i % 2) != 0)
-        {
-            swapPointers(space,result);
-        }
-        hostSimulation(&params,space,result);
+    	hostSimulation(&params,space,result);
+		swapPointers(space,result);
 #if PRINT_RESULTS
-        bytePrinter.printIteration((Fraction*)result, i);
+		if(i % 2==0)
+			bytePrinter.printIteration((Fraction*)result, i);
+		else
+			bytePrinter.printIteration((Fraction*)space, i);
 #endif
     }
     Timer::getInstance().stop("Host simulation time");
     printf("Host simulation completed\n");
     Timer::getInstance().printResults();
 
-    free(space);
-    return (Fraction*)result;
+    if(i % 2 == 0)
+    {
+		free(space);
+		return (Fraction*)result;
+    }
+    else
+    {
+    	free(result);
+		return (Fraction*)space;
+    }
 }
 
 Fraction* execDeviceSurface(FluidParams* params,Fraction* space)
@@ -78,7 +86,7 @@ Fraction* execDeviceSurface(FluidParams* params,Fraction* space)
     cudaSurfaceObject_t resultSurfObj=0;
     cudaCreateSurfaceObject(&resultSurfObj, &resDesc);
 
-    void *resultObjPointer=&resultSurfObj,*spacetObjPointer=&spaceSurfObj;
+    void *resultObjPointer=&resultSurfObj,*spaceObjPointer=&spaceSurfObj;
     int i=0;
 
 #if PRINT_RESULTS
@@ -89,23 +97,21 @@ Fraction* execDeviceSurface(FluidParams* params,Fraction* space)
 
     for(;i<NUM_OF_ITERATIONS;++i)
     {
-        if((i % 2) != 0)
-        {
-            swapPointers(spacetObjPointer,resultObjPointer);
-        }
-        simulationSurface(params,*(cudaSurfaceObject_t*)spacetObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
+    	simulationSurface(params,*(cudaSurfaceObject_t*)spaceObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
+		swapPointers(spaceObjPointer,resultObjPointer);
+
 #if PRINT_RESULTS
-        if(i % 2 != 0) 
-            cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
-        else 
+        if(i % 2 == 0)
             cudaMemcpyFromArray(floats,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+        else
+            cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     }
 #if !PRINT_RESULTS
-    if(i%2!=0) 
-        cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
-    else 
-        cudaMemcpyFromArray(floats,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+    if(i % 2 == 0)
+		cudaMemcpyFromArray(floats,cuResultArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
+	else
+		cudaMemcpyFromArray(floats,cuSpaceArray, 0, 0, memSize,cudaMemcpyDeviceToHost);
 #endif
     Timer::getInstance().stop("Device simulation time");
     printf("Simulation completed\n");
@@ -141,7 +147,7 @@ Fraction* execDevice(enum deviceSimulationType type)
     if(SURFACE==type)
         return execDeviceSurface(d_params,space);
     void *d_space,*d_result;
-    int totalSize = sizeof(Fraction)*SIZE;
+    int totalSize = sizeof(Fraction)*SIZE, i;
     void *result = new Fraction[totalSize];
 
     cudaMalloc((void **)&d_space,totalSize);
@@ -157,22 +163,26 @@ Fraction* execDevice(enum deviceSimulationType type)
     printf("Simulation started\n");
     Timer::getInstance().start("Device simulation time");
 
-    for(int i=0;i<NUM_OF_ITERATIONS;++i)
+    for(i=0;i<NUM_OF_ITERATIONS;++i)
     {
-        if((i % 2) != 0)
-        {
-            swapPointers(d_space,d_result);
-        }
-        simulation(d_params,d_space,d_result,type);
+    	simulation(d_params,d_space,d_result,type);
+		swapPointers(d_space,d_result);
+
 #if PRINT_RESULTS
-        cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+		if(i % 2 == 0)
+			cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+		else
+			cudaMemcpy(space, d_space, totalSize, cudaMemcpyDeviceToHost);
         bytePrinter.printIteration(space, i);
 #else
         cudaThreadSynchronize();
 #endif
     }
 #if !PRINT_RESULTS
-    cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+    if(i % 2 == 0)
+		cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+	else
+		cudaMemcpy(space, d_space, totalSize, cudaMemcpyDeviceToHost);
 #endif
     Timer::getInstance().stop("Device simulation time");
     printf("Simulation completed\n");
@@ -183,6 +193,7 @@ Fraction* execDevice(enum deviceSimulationType type)
     cudaFree(d_result);
     return space;
 }
+
 int main()
 {
     bool hostSimulationOn = true;
@@ -197,9 +208,9 @@ int main()
     {
         hostOutputSpace = execHost();
         compare_results(hostOutputSpace,deviceOutputSpace);
-
         free(hostOutputSpace);
     }
+
     free(deviceOutputSpace);
     return 0;
 }
