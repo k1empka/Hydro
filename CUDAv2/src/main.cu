@@ -9,7 +9,7 @@
 #include "Fraction.h"
 
 #define RANDOM false
-#define PRINT_RESULTS false
+#define PRINT_RESULTS true
 
 Fraction* execHost()
 {
@@ -197,7 +197,7 @@ Fraction* execDevice(enum deviceSimulationType type)
 int main()
 {
     bool hostSimulationOn = true;
-    enum deviceSimulationType type = SURFACE;
+    enum deviceSimulationType type = SHARED_3D_LAYER_FOR_IN;
 
     Fraction* hostOutputSpace,* deviceOutputSpace;
 

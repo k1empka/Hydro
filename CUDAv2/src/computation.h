@@ -4,9 +4,9 @@
 #include "Fraction.h"
 
 #define NUM_OF_ITERATIONS 10
-#define X_SIZE 10
-#define Y_SIZE 10
-#define Z_SIZE 10
+#define X_SIZE 100
+#define Y_SIZE 100
+#define Z_SIZE 100
 #define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
 #define MAX_START_FORCE 100

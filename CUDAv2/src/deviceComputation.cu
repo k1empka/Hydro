@@ -94,23 +94,39 @@ __global__ void stepShared3DLayerForIn(FluidParams* params, Fraction* spaceData,
     __shared__ Fraction shSpace[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4];
     __syncthreads(); // wait for constructors
 
+    Fraction zpp, zp, zc, zn, znn;
+
     if(x<X_SIZE && y<Y_SIZE)
     {
+#pragma unroll
         for (int z = 2; z < Z_SIZE - 2; ++z)
         {
             const int idx = IDX_3D(x,y,z);
             fillShMem(make_int3(x, y, z), spaceData, shSpace);
+            __syncthreads(); // wait for threads to fill whole shared memory
+
+            if (z == 2)
+            {
+                zpp = spaceData[IDX_3D(x, y, z - 2)];
+                zp = spaceData[IDX_3D(x, y, z - 1)];
+                zc = shSpace[threadIdx.x+2][threadIdx.y+2];
+                zn = spaceData[IDX_3D(x, y, z + 1)];
+            }
+            znn = spaceData[IDX_3D(x, y, z + 2)];
 
             __syncthreads(); // wait for threads to fill whole shared memory
 
                              // Calculate cell  with data from shared memory (Layer part x,y)
-            resultData[idx] = resultZ(params, spaceData[IDX_3D(x, y, z - 2)],  // zpp
-                                              spaceData[IDX_3D(x, y, z - 1)],  // zp
-                                              spaceData[idx],      // cur
-                                              spaceData[IDX_3D(x, y, z + 1)],  // zn
-                                              spaceData[IDX_3D(x, y, z + 2)],  // znn
+            resultData[idx] = resultZ(params, zpp,
+                                              zp,
+                                              zc,
+                                              zn, 
+                                              znn, 
                                               shSpace);
-
+            zpp = zp;
+            zp = zc;
+            zc = zn;
+            zn = znn;
         }
     }
 }
