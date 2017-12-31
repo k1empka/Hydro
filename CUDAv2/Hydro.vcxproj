@@ -23,12 +23,14 @@
     <ClInclude Include="src\customTimer.h" />
     <ClInclude Include="src\Fraction.h" />
     <ClInclude Include="src\printer.h" />
+    <ClInclude Include="src\ntree.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
     <ClCompile Include="src\hostComputation.cpp" />
     <ClCompile Include="src\printer.cpp" />
+    <ClCompile Include="src\ntree.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -116,7 +118,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <GenerateLineInfo>true</GenerateLineInfo>
       <PtxAsOptionV>false</PtxAsOptionV>
-      <CodeGeneration>compute_50,sm_50</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
       <Runtime>InheritFromHost</Runtime>
     </CudaCompile>
   </ItemDefinitionGroup>
@@ -163,7 +165,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <CudaRuntime>Static</CudaRuntime>
       <NvccCompilation>compile</NvccCompilation>
-      <CodeGeneration>compute_50,sm_50</CodeGeneration>
+      <CodeGeneration>compute_30,sm_30</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

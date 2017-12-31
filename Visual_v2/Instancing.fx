@@ -26,6 +26,8 @@ sampler_state
     MagFilter = Linear;
     MipFilter = Linear;
     //BlendEnable[0] = TRUE;
+    //CullMode = None;
+    //AlphaBlendEnable = TRUE;
     //DestBlend = INV_SRC_ALPHA;
     //SrcBlend = SRC_ALPHA;
 };
@@ -57,20 +59,22 @@ void VS_ShaderInstancing(float4 vPos : POSITION,
 float4 PS(float2 vTex0 : TEXCOORD0,
 			float4 vColor : COLOR0) : COLOR0
 {
-    //return tex2D( g_samScene, vTex0 ) * vColor;
-    float4 outColor = tex2D(g_samScene, vTex0) * vColor;
-    return outColor;
+    return tex2D( g_samScene, vTex0 ) * vColor;
+    //float4 outColor = tex2D(g_samScene, vTex0) * vColor;
+    //return outColor;
 }
 
 technique TShader_Instancing
 {
     pass P0
     {
-        AlphaBlendEnable = TRUE;
-        DestBlend = INVSRCALPHA;
-        SrcBlend = SRCALPHA;
-        CullMode = None;
         ZEnable = true;
+        //FillMode = Wireframe;
+        //CullMode = None;
+        //AlphaBlendEnable = TRUE;
+        SrcBlend = SRCALPHA;
+        DestBlend = INVSRCALPHA;
+        
         VertexShader = compile vs_2_0 VS_ShaderInstancing();
         PixelShader = compile ps_2_0 PS();
     }

@@ -40,35 +40,43 @@ void initCuda()
 Fraction* initSpace(const bool random)
 {
     Fraction* space = new Fraction[SIZE];
-	if(NULL==space)
+	if(nullptr==space)
 	{
 		printf("memory allocation error\n");
-		return NULL;
+		return nullptr;
 	}
 
 	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFERENT RESULT EACH TIME
 	if(true==random)
 		srand(time(NULL));
 
-	for(int i=0; i<SIZE;++i)
-	{
-		if(true==random)
-		{
-			space[i].E = (float)(rand() % MAX_START_FORCE + 1);
-			space[i].R = (float)(rand() % MAX_START_FORCE + 1);
-			space[i].Vx= (float)(MAX_VELOCITY%rand());
-			space[i].Vy= 0.0f;
-			space[i].Vz= 0.0f;
-		}
-		else
-		{
-			space[i].E = (float)MAX_START_FORCE;
-			space[i].R = (float)MAX_START_FORCE;
-			space[i].Vx= (float)MAX_VELOCITY;
-			space[i].Vy= 0.0f;
-			space[i].Vz= 0.0f;
-		}
-	}
+    const int3 mid = make_int3(X_SIZE / 2, Y_SIZE / 2, Z_SIZE / 2);
+    const int3 rad = make_int3(X_SIZE / 6, Y_SIZE / 6, Z_SIZE / 6);
+    const int3 start = make_int3(mid.x - rad.x, mid.y - rad.y, mid.z - rad.z);
+    const int3 end = make_int3(mid.x + rad.x, mid.y + rad.y, mid.z + rad.z);
+
+	for(int z=start.z; z < end.z;++z)
+        for (int y = start.y; y < end.y; ++y)
+            for (int x = start.x; x < end.x; ++x)
+	        {
+                int i = IDX_3D(x, y, z);
+		        if(true==random)
+		        {
+			        space[i].E = (float)(rand() % MAX_START_FORCE + 1);
+			        space[i].R = (float)(rand() % MAX_START_FORCE + 1);
+			        space[i].Vx= (float)(MAX_VELOCITY%rand());
+			        space[i].Vy= 0.0f;
+			        space[i].Vz= 0.0f;
+		        }
+		        else
+		        {
+			        space[i].E = (float)MAX_START_FORCE;
+			        space[i].R = (float)MAX_START_FLUX;
+			        space[i].Vx= (float)MAX_VELOCITY;
+			        space[i].Vy= 0.0f;
+			        space[i].Vz= 0.0f;
+		        }
+	        }
 
 	return space;
 }
