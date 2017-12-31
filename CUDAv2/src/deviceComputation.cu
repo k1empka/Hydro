@@ -144,16 +144,16 @@ __global__ void stepGlobal(FluidParams* params,Fraction* spaceData,Fraction* res
     }
 }
 
-__device__ void writeSurface(Fraction f,cudaSurfaceObject_t data,const int idx)
+__device__ void writeSurface(Fraction f,cudaSurfaceObject_t data,const int x,const int y,const int z)
 {
 
 	static const int SIZE_OF_FLOAT = sizeof(float);
 
-	surf2Dwrite((f.E), data, SIZE_OF_FLOAT*(5*idx),  0);
-	surf2Dwrite((f.R), data, SIZE_OF_FLOAT*(5*idx+1),0);
-	surf2Dwrite((f.Vx),data, SIZE_OF_FLOAT*(5*idx+2),0);
-	surf2Dwrite((f.Vy),data, SIZE_OF_FLOAT*(5*idx+3),0);
-	surf2Dwrite((f.Vz),data, SIZE_OF_FLOAT*(5*idx+4),0);
+	surf3Dwrite((f.E), data, SIZE_OF_FLOAT*(5*x),  y, z);
+	surf3Dwrite((f.R), data, SIZE_OF_FLOAT*(5*x+1),y, z);
+	surf3Dwrite((f.Vx),data, SIZE_OF_FLOAT*(5*x+2),y, z);
+	surf3Dwrite((f.Vy),data, SIZE_OF_FLOAT*(5*x+3),y, z);
+	surf3Dwrite((f.Vz),data, SIZE_OF_FLOAT*(5*x+4),y, z);
 
 }
 
@@ -166,10 +166,10 @@ __global__ void stepSurface(FluidParams* params,cudaSurfaceObject_t spaceData,cu
     if (x < X_SIZE - 2 && y < Y_SIZE - 2 && z < Z_SIZE - 2 &&
         x > 1 && y > 1 && z > 1) 
     {
-        const int idx = IDX_3D(x,y,z);
+        //const int idx = IDX_3D(x,y,z);
         const Fraction output = result3DSurface(params,spaceData,make_int3(x, y, z));
 
-        writeSurface(output,resultData,idx);
+        writeSurface(output,resultData,x,y,z);
     }
 }
 

@@ -300,18 +300,18 @@ __host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data,int3 pos
     return result;
 }
 
-__device__ Fraction readFraction(cudaSurfaceObject_t data,const int idx)
+__device__ Fraction readFraction(cudaSurfaceObject_t data,const int x,const int y,const int z)
 {
 
 	static const int SIZE_OF_FLOAT = sizeof(float);
 
 	Fraction f;
 
-	surf2Dread(&(f.E), data, SIZE_OF_FLOAT*(5*idx),  0);
-	surf2Dread(&(f.R), data, SIZE_OF_FLOAT*(5*idx+1),0);
-	surf2Dread(&(f.Vx),data, SIZE_OF_FLOAT*(5*idx+2),0);
-	surf2Dread(&(f.Vy),data, SIZE_OF_FLOAT*(5*idx+3),0);
-	surf2Dread(&(f.Vz),data, SIZE_OF_FLOAT*(5*idx+4),0);
+	surf3Dread(&(f.E), data, SIZE_OF_FLOAT*(5*x),  y, z);
+	surf3Dread(&(f.R), data, SIZE_OF_FLOAT*(5*x+1),y, z);
+	surf3Dread(&(f.Vx),data, SIZE_OF_FLOAT*(5*x+2),y, z);
+	surf3Dread(&(f.Vy),data, SIZE_OF_FLOAT*(5*x+3),y, z);
+	surf3Dread(&(f.Vz),data, SIZE_OF_FLOAT*(5*x+4),y, z);
 
 	return f;
 }
@@ -320,35 +320,34 @@ __device__ Fraction result3DSurface(FluidParams* pars, cudaSurfaceObject_t data,
 {
     Fraction cur, result;
 
-    cur = readFraction(data,IDX_3D(pos.x, pos.y, pos.z));
+    cur = readFraction(data,pos.x, pos.y, pos.z);
 
     result = cur;
 
     {
         Fraction xpp,xp,xn,xnn;
-		xpp=readFraction(data,IDX_3D(pos.x - 2, pos.y, pos.z));
-		xp =readFraction(data,IDX_3D(pos.x - 1, pos.y, pos.z));
-		xn =readFraction(data,IDX_3D(pos.x + 1, pos.y, pos.z));
-		xnn=readFraction(data,IDX_3D(pos.x + 2, pos.y, pos.z));
+		xpp=readFraction(data,pos.x - 2, pos.y, pos.z);
+		xp =readFraction(data,pos.x - 1, pos.y, pos.z);
+		xn =readFraction(data,pos.x + 1, pos.y, pos.z);
+		xnn=readFraction(data,pos.x + 2, pos.y, pos.z);
         result = result + fluidAlgorithm(eDim::x, pars, xpp, xp, cur, xn, xnn);
     }
     {
         Fraction ypp,yp,yn,ynn;
-        ypp=readFraction(data,IDX_3D(pos.x, pos.y - 2, pos.z));
-		yp =readFraction(data,IDX_3D(pos.x, pos.y - 1, pos.z));
-		yn =readFraction(data,IDX_3D(pos.x, pos.y + 1, pos.z));
-		ynn=readFraction(data,IDX_3D(pos.x, pos.y + 2, pos.z));
+        ypp=readFraction(data,pos.x, pos.y - 2, pos.z);
+		yp =readFraction(data,pos.x, pos.y - 1, pos.z);
+		yn =readFraction(data,pos.x, pos.y + 1, pos.z);
+		ynn=readFraction(data,pos.x, pos.y + 2, pos.z);
         result = result + fluidAlgorithm(eDim::y, pars, ypp, yp, cur, yn, ynn);
     }
     {
         Fraction zpp,zp,zn,znn;
-        zpp=readFraction(data,IDX_3D(pos.x, pos.y, pos.z - 2));
-		zp =readFraction(data,IDX_3D(pos.x, pos.y, pos.z - 1));
-		zn =readFraction(data,IDX_3D(pos.x, pos.y, pos.z + 1));
-		znn=readFraction(data,IDX_3D(pos.x, pos.y, pos.z + 2));
+        zpp=readFraction(data,pos.x, pos.y, pos.z - 2);
+		zp =readFraction(data,pos.x, pos.y, pos.z - 1);
+		zn =readFraction(data,pos.x, pos.y, pos.z + 1);
+		znn=readFraction(data,pos.x, pos.y, pos.z + 2);
         result = result + fluidAlgorithm(eDim::z, pars, zpp, zp, cur, zn, znn);
     }
-
     return result;
 }
 

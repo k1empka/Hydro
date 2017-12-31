@@ -1,6 +1,8 @@
 #include "computation.h"
 #include "Fraction.h"
 
+#include <stdio.h>
+
 void hostSimulation(FluidParams* pars,void* spaceData, void* resultData)
 {
 	Fraction* spaceFraction = (Fraction*)spaceData;
