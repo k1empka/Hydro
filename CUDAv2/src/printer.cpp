@@ -3,8 +3,13 @@
 #include "printer.h"
 #include "computation.h"
 
-Printer::Printer(const char* title)
+Printer::Printer(const char* title, const StartArgs args)
 {
+	this->NUM_OF_ITERATIONS = args.NUM_OF_ITERATIONS;
+	this->X_SIZE = args.X_SIZE;
+	this->Y_SIZE = args.Y_SIZE;
+	this->Z_SIZE = args.Z_SIZE;
+
     initOutputFile(title);
     printHeader();
     printf("Data written to: %s\n", title);
@@ -43,11 +48,13 @@ void Printer::printHeader()
 void Printer::printIteration(Fraction* space, int iter)
 {
 	float v;
-	int size = sizeof(float);
+	int floatSize = sizeof(float);
+
+	static const int SIZE = X_SIZE*Y_SIZE*Z_SIZE;
 
 	for(int i=0; i<SIZE;++i)
 	{
 		v = space[i].E;
-		fwrite(&v,size,1,f);					
+		fwrite(&v,floatSize,1,f);
 	}
 }

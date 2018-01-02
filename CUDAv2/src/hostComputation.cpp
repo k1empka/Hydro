@@ -3,18 +3,18 @@
 
 #include <stdio.h>
 
-void hostSimulation(FluidParams* pars,void* spaceData, void* resultData)
+void hostSimulation(StartArgs args, FluidParams* pars,void* spaceData, void* resultData)
 {
 	Fraction* spaceFraction = (Fraction*)spaceData;
 	Fraction* resultFraction = (Fraction*)resultData;
-	for(int z=2; z<Z_SIZE-2;++z)
+	for(int z=2; z<args.Z_SIZE-2;++z)
 	{
-		for(int y=2; y<Y_SIZE-2;++y)
+		for(int y=2; y<args.Y_SIZE-2;++y)
 		{
-			for(int x=2; x<X_SIZE-2;++x)
+			for(int x=2; x<args.X_SIZE-2;++x)
 			{
-                auto const& f = result3D(pars, spaceFraction, make_int3(x, y, z));
-                resultFraction[IDX_3D(x, y, z)] = f;
+                auto const& f = result3D(args,pars, spaceFraction, make_int3(x, y, z));
+                resultFraction[args.IDX_3D(x, y, z)] = f;
 			}
 		}
 	}

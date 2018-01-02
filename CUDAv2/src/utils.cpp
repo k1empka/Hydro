@@ -37,9 +37,9 @@ void initCuda()
         cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
-Fraction* initSpace(const bool random)
+Fraction* initSpace(StartArgs args,const bool random)
 {
-    Fraction* space = new Fraction[SIZE];
+    Fraction* space = new Fraction[args.SIZE()];
 	if(nullptr==space)
 	{
 		printf("memory allocation error\n");
@@ -50,8 +50,8 @@ Fraction* initSpace(const bool random)
 	if(true==random)
 		srand(time(NULL));
 
-    const int3 mid = make_int3(X_SIZE / 2, Y_SIZE / 2, Z_SIZE / 2);
-    const int3 rad = make_int3(X_SIZE / 6, Y_SIZE / 6, Z_SIZE / 6);
+    const int3 mid = make_int3(args.X_SIZE / 2, args.Y_SIZE / 2, args.Z_SIZE / 2);
+    const int3 rad = make_int3(args.X_SIZE / 6, args.Y_SIZE / 6, args.Z_SIZE / 6);
     const int3 start = make_int3(mid.x - rad.x, mid.y - rad.y, mid.z - rad.z);
     const int3 end = make_int3(mid.x + rad.x, mid.y + rad.y, mid.z + rad.z);
 
@@ -59,7 +59,7 @@ Fraction* initSpace(const bool random)
         for (int y = start.y; y < end.y; ++y)
             for (int x = start.x; x < end.x; ++x)
 	        {
-                int i = IDX_3D(x, y, z);
+                int i = args.IDX_3D(x, y, z);
 		        if(true==random)
 		        {
 			        space[i].E = (float)(rand() % MAX_START_FORCE + 1);
@@ -90,20 +90,20 @@ void swapPointers(void*& p1,void*& p2)
 	p2=tmp;
 }
 
-void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
+void compare_results(StartArgs args, Fraction* hostSpace,Fraction* deviceSpace)
 {
 	float diffMax=0,diffMin=0;
 	int numOfDiffs=0;
 	bool firstDiff = true;
     float eps = 0.001;
 
-    for (int z = 2; z<Z_SIZE - 2; ++z)
+    for (int z = 2; z<args.Z_SIZE - 2; ++z)
     {
-        for (int y = 2; y < Y_SIZE - 2; ++y)
+        for (int y = 2; y < args.Y_SIZE - 2; ++y)
         {
-            for (int x = 2; x < X_SIZE - 2; ++x)
+            for (int x = 2; x < args.X_SIZE - 2; ++x)
             {
-                int i = IDX_3D(x, y, z);
+                int i = args.IDX_3D(x, y, z);
                 auto const& h = hostSpace[i];
                 auto const& d = deviceSpace[i];
                 float err = fabs(hostSpace[i].E - deviceSpace[i].E);
@@ -118,26 +118,16 @@ void compare_results(Fraction* hostSpace,Fraction* deviceSpace)
 	printf("Compare results:\n\tNum of differences: %d\n",numOfDiffs);
 }
 
-void printData(Fraction* space)
+float* spaceToFloats(StartArgs args,Fraction* space)
 {
-	printf("Data:\n");
-
-	for(int i=0; i<SIZE;++i)
-	{
-		printf("id:%d\tE:%f\tR:%f\tVx:%f\tVy:%f\tVz:%f\n",i,space[i].E,space[i].R,space[i].Vx,space[i].Vy,space[i].Vz);
-	}
-}
-
-float* spaceToFloats(Fraction* space)
-{
-    float* spaceFloats = (float*)(malloc(sizeof(float)*SIZE*5));
+    float* spaceFloats = (float*)(malloc(sizeof(float)*args.SIZE()*5));
 	if(NULL==spaceFloats)
 	{
 		printf("memory allocation error\n");
 		return NULL;
 	}
 
-	for(int i=0; i<SIZE;++i)
+	for(int i=0; i<args.SIZE();++i)
 	{
 		spaceFloats[5*i] = space[i].E;
 		spaceFloats[5*i+1]=space[i].R;
@@ -149,9 +139,9 @@ float* spaceToFloats(Fraction* space)
 	return spaceFloats;
 }
 
-void floatsToSpace(float* floats,Fraction* space)
+void floatsToSpace(StartArgs args,float* floats,Fraction* space)
 {
-	for(int i=0; i<SIZE;++i)
+	for(int i=0; i<args.SIZE();++i)
 	{
 		space[i].E = floats[5*i];
 		space[i].R = floats[5*i+1];

@@ -272,29 +272,29 @@ __host__ __device__ Fraction fluidAlgorithm(eDim dim, FluidParams* pars, Fractio
     return (LR.L - LR.R) * alpha;
 }
 
-__host__ __device__ Fraction result3D(FluidParams* pars, Fraction* data,int3 pos)
+__host__ __device__ Fraction result3D(StartArgs args, FluidParams* pars, Fraction* data,int3 pos)
 {
     Fraction cur;
-    Fraction result = cur = data[IDX_3D(pos.x, pos.y, pos.z)];
+    Fraction result = cur = data[args.IDX_3D(pos.x, pos.y, pos.z)];
     {
-        Fraction xpp = data[IDX_3D(pos.x - 2, pos.y, pos.z)],
-            xp = data[IDX_3D(pos.x - 1, pos.y, pos.z)],
-            xn = data[IDX_3D(pos.x + 1, pos.y, pos.z)],
-            xnn = data[IDX_3D(pos.x + 2, pos.y, pos.z)];
+        Fraction xpp = data[args.IDX_3D(pos.x - 2, pos.y, pos.z)],
+            xp = data[args.IDX_3D(pos.x - 1, pos.y, pos.z)],
+            xn = data[args.IDX_3D(pos.x + 1, pos.y, pos.z)],
+            xnn = data[args.IDX_3D(pos.x + 2, pos.y, pos.z)];
         result = result + fluidAlgorithm(eDim::x, pars, xpp, xp, cur, xn, xnn);
     }
     {
-        Fraction ypp = data[IDX_3D(pos.x, pos.y - 2, pos.z)],
-            yp = data[IDX_3D(pos.x, pos.y - 1, pos.z)],
-            yn = data[IDX_3D(pos.x, pos.y + 1, pos.z)],
-            ynn = data[IDX_3D(pos.x, pos.y + 2, pos.z)];
+        Fraction ypp = data[args.IDX_3D(pos.x, pos.y - 2, pos.z)],
+            yp = data[args.IDX_3D(pos.x, pos.y - 1, pos.z)],
+            yn = data[args.IDX_3D(pos.x, pos.y + 1, pos.z)],
+            ynn = data[args.IDX_3D(pos.x, pos.y + 2, pos.z)];
         result = result + fluidAlgorithm(eDim::y, pars, ypp, yp, cur, yn, ynn);
     }
     {
-        Fraction zpp = data[IDX_3D(pos.x, pos.y, pos.z - 2)],
-            zp = data[IDX_3D(pos.x , pos.y, pos.z - 1)],
-            zn = data[IDX_3D(pos.x, pos.y, pos.z + 1)],
-            znn = data[IDX_3D(pos.x, pos.y, pos.z + 2)];
+        Fraction zpp = data[args.IDX_3D(pos.x, pos.y, pos.z - 2)],
+            zp = data[args.IDX_3D(pos.x , pos.y, pos.z - 1)],
+            zn = data[args.IDX_3D(pos.x, pos.y, pos.z + 1)],
+            znn = data[args.IDX_3D(pos.x, pos.y, pos.z + 2)];
         result = result + fluidAlgorithm(eDim::z, pars, zpp, zp, cur, zn, znn);
     }
     return result;
