@@ -1,9 +1,10 @@
 #include "MapReader.h"
 
-MapReader::MapReader(char *path)
+MapReader::MapReader(char *path, bool fluxParam = false)
 {
 	this->_iterations = new Iterations();
 	this->pathC = path;
+	this->fluxParam = fluxParam;
 
 	ReadFile();
 }
@@ -19,7 +20,7 @@ void MapReader::ReadFile()
 	std::ifstream myfile(this->pathC, std::ios::binary);
 	
 	INT16 storage[5];
-	float cell;
+	float cell[2];
 
 	if (myfile.is_open())
 	{
@@ -45,15 +46,23 @@ void MapReader::ReadFile()
 				{
 					for (int x = 0; x < this->_iterations->sizeX; x++)
 					{
-						myfile.read((char*)(&cell), sizeof(size_cell));
+						if (x > 48 && y > 48 && z > 48)
+							int lol = 0;
+						if (this->fluxParam)
+						{
+							myfile.read((char*)(&cell), sizeof(size_cell) * 2);
+							this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].intensity = cell[1];
+						}
+						else
+							myfile.read((char*)(&cell), sizeof(size_cell));
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX)+y*this->_iterations->sizeY + x].x = x;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].y = y;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].z = z;
-						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].intensity = cell;
-						if (cell > maxInt)
-							maxInt = cell;
-						if (cell < minInt)
-							minInt = cell;
+						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].intensity = cell[0];
+						if (cell[0] > maxInt)
+							maxInt = cell[0];
+						if (cell[0] <= minInt)
+							minInt = cell[0];
 					}
 				}
 			}

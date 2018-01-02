@@ -282,7 +282,7 @@ HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFA
 	V_RETURN(OnCreateBuffers(pd3dDevice));
 
 	// Tektura do wymiany <-------------- !!!!!!!!!!!! tklempka
-	hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"env4.png");
+	hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"env2.bmp");
 	if (FAILED(hr))
 		return DXTRACE_ERR(L"DXUTFindDXSDKMediaFileCch", hr);
 	//-------------------------------------------------
@@ -549,13 +549,13 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 				FillFaceInstance(pVerts, pIndices, 4,
 					D3DXVECTOR3(0.f, 1.f, 0.f),
 					D3DXVECTOR3(0.f, 1.f, 0.f),
-					D3DXVECTOR3(1.f, 0.f, 0.f),
+					D3DXVECTOR3(0.f, 1.f, 0.f),
 					iInstance);
 
 				FillFaceInstance(pVerts, pIndices, 5,
 					D3DXVECTOR3(0.f, -1.f, 0.f),
 					D3DXVECTOR3(0.f, -1.f, 0.f),
-					D3DXVECTOR3(1.f, 0.f, 0.f),
+					D3DXVECTOR3(0.f, 1.f, 0.f),
 					iInstance);
 			}
 
@@ -678,7 +678,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 			else
 			{
 				if ((i > g_sizeX*g_sizeY*g_warstwa) && (i < g_sizeX*g_sizeY + g_sizeX*g_sizeY*g_warstwa))
-					g_vBoxInstance_Color[i].a =  g_vBoxInstance_Color[i].r;
+					g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;// +0.3f;
 				else
 					g_vBoxInstance_Color[i].a = 0.0f;
 			}
@@ -700,7 +700,8 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 		{         
 			int nRenderBoxes = min(nRemainingBoxes, g_nNumBatchInstance);
 
-			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Position, g_vBoxInstance_Position + g_NumBoxes - nRemainingBoxes, nRenderBoxes));
+			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Position, g_vBoxInstance_Position + g_NumBoxes -
+				nRemainingBoxes, nRenderBoxes));
 			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Color, (D3DXVECTOR4*)
 				(g_vBoxInstance_Color + g_NumBoxes - nRemainingBoxes), nRenderBoxes));
 
