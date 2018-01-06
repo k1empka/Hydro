@@ -665,7 +665,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 		float maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
 		float minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
 		float tmp = 255.0f / (maxTmp - minTmp);
-		if (maxTmp - minTmp)
+		if (maxTmp - minTmp == 0.0f)
 			tmp = 255.0f;
 
 		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX*g_sizeY*g_sizeZ : g_NumBoxes); i++)
