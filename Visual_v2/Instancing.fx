@@ -71,8 +71,8 @@ technique TShader_Instancing
         ZEnable = true;
         //FillMode = Wireframe;
         //CullMode = None;
-        //AlphaBlendEnable = TRUE;
-        SrcBlend = SRCALPHA;
+        AlphaBlendEnable = TRUE;
+        //SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
         
         VertexShader = compile vs_2_0 VS_ShaderInstancing();

@@ -282,7 +282,7 @@ HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFA
 	V_RETURN(OnCreateBuffers(pd3dDevice));
 
 	// Tektura do wymiany <-------------- !!!!!!!!!!!! tklempka
-	hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"env4.png");
+	hr = DXUTFindDXSDKMediaFileCch(str, MAX_PATH, L"env2.bmp");
 	if (FAILED(hr))
 		return DXTRACE_ERR(L"DXUTFindDXSDKMediaFileCch", hr);
 	//-------------------------------------------------

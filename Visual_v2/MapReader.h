@@ -14,7 +14,7 @@ public:
 class Iteration
 {
 public:
-	float minIntensity, maxIntensity;
+	float minIntensity, maxIntensity, minFlux, maxFlux;
 	unsigned int elementsNum;
 	Point *point;
 };
@@ -44,6 +44,7 @@ public:
 
 private:
 	void MapReader::ReadFile();
+	void MapReader::Normalize();
 	bool MapReader::GetHeader(std::string line);
 	bool MapReader::InterprateLine(std::string line);
 	unsigned int MapReader::split(const std::string &txt, std::vector<std::string> &strs, char ch);
