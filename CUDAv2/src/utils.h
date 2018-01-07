@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 void 	    initCuda();
-Fraction*   initSpace(StartArgs args,const bool random);
+Fraction*   initSpace(StartArgs args);
 FluidParams initParams();
 void  	    swapPointers(void*& p1, void*& p2);
 void        compare_results(StartArgs args,Fraction* hostSpace,Fraction* deviceSpace);

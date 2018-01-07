@@ -37,7 +37,7 @@ void initCuda()
         cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
-Fraction* initSpace(StartArgs args,const bool random)
+Fraction* initSpace(StartArgs args)
 {
     Fraction* space = new Fraction[args.SIZE()];
 	if(nullptr==space)
@@ -47,7 +47,7 @@ Fraction* initSpace(StartArgs args,const bool random)
 	}
 
 	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFERENT RESULT EACH TIME
-	if(true==random)
+	if(true==args.random)
 		srand(time(NULL));
 
     const int3 mid = make_int3(args.X_SIZE / 2, args.Y_SIZE / 2, args.Z_SIZE / 2);
@@ -60,7 +60,7 @@ Fraction* initSpace(StartArgs args,const bool random)
             for (int x = start.x; x < end.x; ++x)
 	        {
                 int i = args.IDX_3D(x, y, z);
-		        if(true==random)
+		        if(true==args.random)
 		        {
 			        space[i].E = (float)(rand() % MAX_START_FORCE + 1);
 			        space[i].R = (float)(rand() % MAX_START_FORCE + 1);

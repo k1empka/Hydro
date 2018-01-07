@@ -46,6 +46,7 @@ struct StartArgs
 	int Z_SIZE;
 	bool host;
 	bool print;
+	bool random;
 	enum deviceSimulationType type;
 	__host__ __device__ int IDX_2D(int x,int y){return ((y) * X_SIZE + x);};
 	__host__ __device__ int IDX_3D(int x,int y,int z) {return((z) * (Y_SIZE * X_SIZE) + y * X_SIZE + x);};
