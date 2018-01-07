@@ -41,7 +41,7 @@ void VS_ShaderInstancing(float4 vPos : POSITION,
 						out float2 oTex0 : TEXCOORD0)
 {
     float4 vBoxInstance = g_vBoxInstance_Position[vBoxInstanceIndex];
-    vBoxInstance.w *= 10 * 3.1415;
+    vBoxInstance.w *= 2 * 3.1415;
     float4 vRotatedPos = vPos;
     vRotatedPos.x = vPos.x * cos(vBoxInstance.w) + vPos.z * sin(vBoxInstance.w);
     vRotatedPos.z = vPos.z * cos(vBoxInstance.w) - vPos.x * sin(vBoxInstance.w);
@@ -72,7 +72,7 @@ technique TShader_Instancing
         //FillMode = Wireframe;
         //CullMode = None;
         AlphaBlendEnable = TRUE;
-        //SrcBlend = SRCALPHA;
+        SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;
         
         VertexShader = compile vs_2_0 VS_ShaderInstancing();

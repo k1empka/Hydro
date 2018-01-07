@@ -22,6 +22,8 @@ CModelViewerCamera              g_Camera;
 //Iterations*						iterations = NULL;
 ID3DXEffect*                    g_pEffect = NULL;
 
+CDXUTDialog                     g_SampleUI;
+
 D3DXHANDLE                      g_HandleTechnique;
 D3DXHANDLE                      g_HandleBoxInstance_Position;
 D3DXHANDLE                      g_HandleBoxInstance_Color;
@@ -44,6 +46,7 @@ const int                       g_nNumBatchInstance = 120;
 int                             g_NumBoxes = 1000000;
 double                          g_fLastTime = 0.0;
 double                          g_fBurnAmount = 0.0;
+int								g_ParameterToShow = 1;
 clock_t							g_timeFrame = 0.0;
 
 D3DXCOLOR						g_vBoxInstance_Color[g_nMaxBoxes];
@@ -84,6 +87,7 @@ struct BOX_INSTANCEDATA_POS
 	BYTE rotation;
 };
 
+#define IDC_RENDERMETHOD_LIST   1
 
 Iterations*						g_Iterations;
 
@@ -119,6 +123,7 @@ D3DVERTEXELEMENT9 g_VertexElemConstants[] =
 
 bool CALLBACK IsD3D9DeviceAcceptable(D3DCAPS9* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat,
 	bool bWindowed, void* pUserContext);
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
 bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext )
 {
@@ -236,7 +241,19 @@ INT WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR argv, int )
 
 void InitApp()
 {
+	g_SampleUI.Init(&g_DialogResourceManager);
 	g_SettingsDlg.Init(&g_DialogResourceManager);
+	
+	g_SampleUI.SetCallback(OnGUIEvent); int iY = 24;
+
+	g_SampleUI.AddComboBox(IDC_RENDERMETHOD_LIST, 0, 0, 166, 22);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetDropHeight(12 * 4);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Hardware Instancing", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Shader Instancing", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Constants Instancing", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Stream Instancing", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetSelectedByIndex(g_ParameterToShow);
+
 }
 
 HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
@@ -576,6 +593,7 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 		for (BYTE iY = 0; iY < g_sizeY; iY++)
 			for (BYTE iX = 0; iX < g_sizeX; iX++)
 			{
+				g_vBoxInstance_Color[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX] = D3DCOLOR_ARGB(255, 255, 255, 255);
 				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].x = iX * 16 / 255.0f;// (i%g_sizeX) * 20 / 255.0f;
 				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
@@ -688,7 +706,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 		g_timeFrame = 0.0;
 	}
 
-
+	
 	for (iPass = 0; iPass < cPasses; iPass++)
 	{
 		V(g_pEffect->BeginPass(iPass));
@@ -858,4 +876,28 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 	g_Camera.HandleMessages(hWnd, uMsg, wParam, lParam);
 
 	return 0;
+}
+
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
+{
+	WCHAR szMessage[100];
+	switch (nControlID)
+	{
+		case IDC_RENDERMETHOD_LIST:
+		{
+			DXUTComboBoxItem* pCBItem = g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->GetSelectedItem();
+			g_ParameterToShow = wcscmp(pCBItem->strText, L"Hardware Instancing") == 0 ? 0 :
+				wcscmp(pCBItem->strText, L"Shader Instancing") == 0 ? 1 :
+				wcscmp(pCBItem->strText, L"Constants Instancing") == 0 ? 2 :
+				wcscmp(pCBItem->strText, L"Stream Instancing") == 0 ? 3 : -1;
+
+			// Note hardware instancing is not supported on non vs_3_0 HW
+			// This sample allows it to be set, but displays an error to the user
+
+			// recreate the buffers
+			OnDestroyBuffers();
+			OnCreateBuffers(DXUTGetD3D9Device());
+			break;
+		}
+	}
 }
