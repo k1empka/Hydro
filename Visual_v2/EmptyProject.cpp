@@ -49,7 +49,7 @@ const int                       g_nNumBatchInstance = 120;
 int                             g_NumBoxes = 1000000;
 double                          g_fLastTime = 0.0;
 double                          g_fBurnAmount = 0.0;
-int								g_ParameterToShow = 1;
+int								g_ParameterToShow = 0;
 clock_t							g_timeFrame = 0.0;
 
 D3DXCOLOR						g_vBoxInstance_Color[g_nMaxBoxes];
@@ -253,10 +253,8 @@ void InitApp()
 
 	g_SampleUI.AddComboBox(IDC_RENDERMETHOD_LIST, 0, 0, 166, 22);
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetDropHeight(12 * 4);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Hardware Instancing", NULL);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Shader Instancing", NULL);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Constants Instancing", NULL);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Stream Instancing", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Intensity", NULL);
+	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Flux", NULL);
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetSelectedByIndex(g_ParameterToShow);
 
 	g_SampleUI.AddStatic(IDC_STATIC, L"P - Next slice\nO - previous slice\nS - center slice\nI - Start/Stop simulation\nU - reset simulation", 0, 100, 200, 300);
@@ -452,6 +450,7 @@ HRESULT CALLBACK OnD3D9ResetDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFAC
 	g_HUD.SetSize(170, 170);
 	g_SampleUI.SetLocation(0, 0);
 	g_SampleUI.SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
+
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
 	g_Camera.SetProjParams(D3DX_PI/3, fAspectRatio, 0.1f, 1000.0f);
@@ -713,11 +712,26 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 	g_timeFrame += clock();
 	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 200)
 	{
-		float maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
-		float minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
-		float tmp = 255.0f / (maxTmp - minTmp);
-		if (maxTmp - minTmp == 0.0f)
-			tmp = 255.0f;
+		float tmp = -1;
+		float maxTmp = -1;
+		float minTmp = -1;
+
+		if (g_ParameterToShow == 0)
+		{
+			maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
+			minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
+			tmp = 255.0f / (maxTmp - minTmp);
+			if (maxTmp - minTmp == 0.0f)
+				tmp = 255.0f;
+		}
+		else if (g_ParameterToShow == 1)
+		{
+			maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
+			minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
+			tmp = 255.0f / (maxTmp - minTmp);
+			if (maxTmp - minTmp == 0.0f)
+				tmp = 255.0f;
+		}
 
 		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX * g_sizeY*g_sizeZ : g_NumBoxes); i++)
 		{
@@ -952,6 +966,11 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 			}
 		}
 	}
+
+	*pbNoFurtherProcessing = g_SampleUI.MsgProc(hWnd, uMsg, wParam, lParam);
+	if (*pbNoFurtherProcessing)
+		return 0;
+
 	g_Camera.HandleMessages(hWnd, uMsg, wParam, lParam);
 
 	return 0;
@@ -965,15 +984,9 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, vo
 		case IDC_RENDERMETHOD_LIST:
 		{
 			DXUTComboBoxItem* pCBItem = g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->GetSelectedItem();
-			g_ParameterToShow = wcscmp(pCBItem->strText, L"Hardware Instancing") == 0 ? 0 :
-				wcscmp(pCBItem->strText, L"Shader Instancing") == 0 ? 1 :
-				wcscmp(pCBItem->strText, L"Constants Instancing") == 0 ? 2 :
-				wcscmp(pCBItem->strText, L"Stream Instancing") == 0 ? 3 : -1;
+			g_ParameterToShow = wcscmp(pCBItem->strText, L"Intensity") == 0 ? 0 :
+				wcscmp(pCBItem->strText, L"Flux") == 0 ? 1 : -1;
 
-			// Note hardware instancing is not supported on non vs_3_0 HW
-			// This sample allows it to be set, but displays an error to the user
-
-			// recreate the buffers
 			OnDestroyBuffers();
 			OnCreateBuffers(DXUTGetD3D9Device());
 			break;
