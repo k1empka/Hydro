@@ -9,14 +9,11 @@
 #include "printer.h"
 #include "Fraction.h"
 
-#define RANDOM false
-//#define PRINT_RESULTS false
-
 Fraction* execHost(StartArgs args)
 {
     Timer::getInstance().clear();
     int totalSize=sizeof(Fraction) * args.SIZE(), i;
-    Printer* bytePrinter = NULL;
+    Printer bytePrinter("host.data",args);
     void* space,*result= new Fraction[totalSize];
     auto params = initParams();
     if (NULL == result)
@@ -25,9 +22,7 @@ Fraction* execHost(StartArgs args)
         exit(-1);
     }
 
-    space = initSpace(args,RANDOM);
-    if(args.print)
-    	bytePrinter = new Printer("host.data",args);
+    space = initSpace(args);
 
     printf("Host simulation started\n");
     Timer::getInstance().start("Host simulation time");
@@ -35,17 +30,21 @@ Fraction* execHost(StartArgs args)
     {
     	hostSimulation(args,&params,space,result);
 		swapPointers(space,result);
-		if(args.print)
+		if(args.print)//print iteration if save flag is on
 			if(i % 2==0)
-				bytePrinter->printIteration((Fraction*)space, i);
+				bytePrinter.printIteration((Fraction*)space, i);
 			else
-				bytePrinter->printIteration((Fraction*)result, i);
+				bytePrinter.printIteration((Fraction*)result, i);
     }
     Timer::getInstance().stop("Host simulation time");
     printf("Host simulation completed\n");
     Timer::getInstance().printResults();
 
-    if(bytePrinter) delete bytePrinter;
+    if(false==args.print)//print only last iteration if save flag is off
+		if(i % 2==0)
+			bytePrinter.printIteration((Fraction*)space, i);
+		else
+			bytePrinter.printIteration((Fraction*)result, i);
 
     if(i % 2 == 0)
     {
@@ -62,7 +61,7 @@ Fraction* execHost(StartArgs args)
 Fraction* execDeviceSurface(StartArgs args,FluidParams* params,Fraction* space)
 {
     float* floats =spaceToFloats(args,space);
-    Printer* bytePrinter = NULL;
+    Printer bytePrinter("device.data",args);
 
     // For float we could create a channel with:
     cudaChannelFormatDesc channelDesc =cudaCreateChannelDesc<float>();
@@ -99,9 +98,6 @@ Fraction* execDeviceSurface(StartArgs args,FluidParams* params,Fraction* space)
     void *resultObjPointer=&resultSurfObj,*spaceObjPointer=&spaceSurfObj;
     int i=0;
 
-    if(args.print)
-    	bytePrinter = new Printer("device.data",args);
-
     printf("Simulation started\n");
     Timer::getInstance().start("Device simulation time");
 
@@ -110,7 +106,7 @@ Fraction* execDeviceSurface(StartArgs args,FluidParams* params,Fraction* space)
     	simulationSurface(args,params,*(cudaSurfaceObject_t*)spaceObjPointer,*(cudaSurfaceObject_t*)resultObjPointer);
 		swapPointers(spaceObjPointer,resultObjPointer);
 
-		if(args.print)
+		if(args.print)//print iteration if save flag is on
 		{
 			copyParams = {0};
 			copyParams.extent = extent;
@@ -127,10 +123,10 @@ Fraction* execDeviceSurface(StartArgs args,FluidParams* params,Fraction* space)
 				cudaMemcpy3D(&copyParams);
 			}
 			floatsToSpace(args,floats,space);
-			bytePrinter->printIteration(space, i);
+			bytePrinter.printIteration(space, i);
 		}
     }
-    if(!args.print)
+    if(false==args.print)
     {
 		copyParams = {0};
 		copyParams.extent = extent;
@@ -161,18 +157,19 @@ Fraction* execDeviceSurface(StartArgs args,FluidParams* params,Fraction* space)
 
     floatsToSpace(args,floats,space);
 
+    if(false==args.print)//print only last iteration if save flag is off
+		bytePrinter.printIteration((Fraction*)space, i);
+
     //free temporary memory
     free(floats);
-
-    if(bytePrinter) delete bytePrinter;
 
     return space;
 }
 
 Fraction* execDevice(StartArgs args)
 {
-    Fraction* space = initSpace(args,RANDOM);
-    Printer* bytePrinter =  NULL;
+    Fraction* space = initSpace(args);
+    Printer bytePrinter("device.data",args);
     FluidParams *d_params,params = initParams();
     cudaMalloc((void **)&d_params, sizeof(FluidParams));
     cudaMemcpy(d_params, &params, sizeof(FluidParams), cudaMemcpyHostToDevice);
@@ -194,8 +191,7 @@ Fraction* execDevice(StartArgs args)
     cudaMemcpy(d_result, result, totalSize, cudaMemcpyHostToDevice);
 
     cudaCheckErrors("Copy mem");
-    if(args.print)
-    	bytePrinter = new Printer("device.data",args);
+
     printf("Simulation started\n");
     Timer::getInstance().start("Device simulation time");
 
@@ -204,22 +200,26 @@ Fraction* execDevice(StartArgs args)
     	simulation(args,d_params,d_space,d_result);
 		swapPointers(d_space,d_result);
 
-		if(args.print)
+		if(args.print)//print iteration if save flag is on
 		{
 			if(i % 2 == 0)
 				cudaMemcpy(space, d_space, totalSize, cudaMemcpyDeviceToHost);
 			else
 				cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
-			bytePrinter->printIteration(space, i);
+			bytePrinter.printIteration(space, i);
 		}
 		else
 			cudaThreadSynchronize();
     }
     if(!args.print)
+    {
 		if(i % 2 == 0)
 			cudaMemcpy(space, d_space, totalSize, cudaMemcpyDeviceToHost);
 		else
 			cudaMemcpy(space, d_result, totalSize, cudaMemcpyDeviceToHost);
+		//print only last iteration if save flag is off
+		bytePrinter.printIteration((Fraction*)space, i);
+    }
 
     Timer::getInstance().stop("Device simulation time");
     printf("Simulation completed\n");
@@ -229,23 +229,22 @@ Fraction* execDevice(StartArgs args)
     cudaFree(d_space);
     cudaFree(d_result);
 
-    if(bytePrinter) delete bytePrinter;
-
     return space;
 }
 
 void printHelp()
 {
 	printf("hydro [options]\n"
-			"--device <type>\t run simulation on GPU, types:\n"
+			"--device <type>\trun simulation on GPU, types:\n"
 			"\t\tGLOBAL, SURFACE, SHARED, SHARED_FOR\n"
-			"--host\t run simulation on CPU\n"
-			"--X <size>\t X map size\n"
-			"--Y <size>\t Y map size\n"
-			"--Z <size>\t Z map size\n"
-			"--ITER <num>\t number of iterations\n"
-			"--save\t\t save all iterations to file, default only last\n"
-			"--help\t\t displays this massage\n"
+			"--host\t\trun simulation on CPU\n"
+			"--X <size>\tX space size\n"
+			"--Y <size>\tY space size\n"
+			"--Z <size>\tZ space size\n"
+			"--ITER <num>\tnumber of iterations\n"
+			"--save\t\tsave all iterations to file, default only last\n"
+			"--help\t\tdisplays this massage\n"
+			"--random\tstarting space values are random\n"
 			"if there is no arguments provided default values are:\n"
 			"\thydro --device GLOBAL --X 100 --Y 100 --Z 100 --ITER 10\n");
 }
@@ -264,6 +263,7 @@ StartArgs parsInputArguments(const int argc, char *argv[])
 	args.host = false;
 	args.type = GLOBAL;
 	args.print = false;
+	args.random = false;
 
 	for(int i=1; i<argc; ++i)
 	{
@@ -285,6 +285,10 @@ StartArgs parsInputArguments(const int argc, char *argv[])
 			++i;
 		}
 		else if(strcmp(argv[i],"--host") == 0)
+		{
+			args.host = true;
+		}
+		else if(strcmp(argv[i],"--random") == 0)
 		{
 			args.host = true;
 		}
