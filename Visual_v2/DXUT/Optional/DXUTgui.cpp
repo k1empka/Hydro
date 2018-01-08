@@ -466,6 +466,7 @@ HRESULT CDXUTDialogResourceManager::OnD3D9ResetDevice()
 
     V_RETURN( m_pd3d9Device->CreateStateBlock( D3DSBT_ALL, &m_pStateBlock ) );
 
+
     return S_OK;
 }
 

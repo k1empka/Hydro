@@ -59,7 +59,8 @@ void VS_ShaderInstancing(float4 vPos : POSITION,
 float4 PS(float2 vTex0 : TEXCOORD0,
 			float4 vColor : COLOR0) : COLOR0
 {
-    return tex2D( g_samScene, vTex0 ) * vColor;
+    return vColor;
+    //return tex2D( g_samScene, vTex0 ) * vColor;
     //float4 outColor = tex2D(g_samScene, vTex0) * vColor;
     //return outColor;
 }

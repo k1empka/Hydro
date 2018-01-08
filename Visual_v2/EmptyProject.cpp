@@ -22,6 +22,7 @@ CModelViewerCamera              g_Camera;
 //Iterations*						iterations = NULL;
 ID3DXEffect*                    g_pEffect = NULL;
 
+CDXUTDialog						g_HUD;
 CDXUTDialog                     g_SampleUI;
 
 D3DXHANDLE                      g_HandleTechnique;
@@ -30,11 +31,11 @@ D3DXHANDLE                      g_HandleBoxInstance_Color;
 D3DXHANDLE                      g_HandleWorld, g_HandleView, g_HandleProjection;
 D3DXHANDLE                      g_HandleTexture;
 
-unsigned int					g_warstwa = -1;
 unsigned int					g_sizeX = 20;
 unsigned int					g_sizeY = 20;
 unsigned int					g_sizeZ = 20;
 unsigned int					g_currentIteration = 0;
+unsigned int					g_warstwa = -1;
 
 bool							g_toTransform = false;
 bool							g_endedTransform = true;
@@ -90,6 +91,7 @@ struct BOX_INSTANCEDATA_POS
 };
 
 #define IDC_RENDERMETHOD_LIST   1
+#define IDC_STATIC              10
 
 Iterations*						g_Iterations;
 
@@ -245,7 +247,8 @@ void InitApp()
 {
 	g_SampleUI.Init(&g_DialogResourceManager);
 	g_SettingsDlg.Init(&g_DialogResourceManager);
-	
+	g_HUD.Init(&g_DialogResourceManager);
+
 	g_SampleUI.SetCallback(OnGUIEvent); int iY = 24;
 
 	g_SampleUI.AddComboBox(IDC_RENDERMETHOD_LIST, 0, 0, 166, 22);
@@ -255,6 +258,12 @@ void InitApp()
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Constants Instancing", NULL);
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Stream Instancing", NULL);
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetSelectedByIndex(g_ParameterToShow);
+
+	g_SampleUI.AddStatic(IDC_STATIC, L"P - Next slice\nO - previous slice\nS - center slice\nI - Start/Stop simulation\nU - reset simulation", 0, 100, 200, 300);
+
+	g_HUD.SetCallback(OnGUIEvent); iY = 10;
+
+	g_warstwa = g_sizeZ / 2;
 
 }
 
@@ -438,12 +447,17 @@ HRESULT CALLBACK OnD3D9ResetDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFAC
 
 	if (g_pEffect)
 		V_RETURN(g_pEffect->OnResetDevice());
+	
+	g_HUD.SetLocation(pBackBufferSurfaceDesc->Width - 170, 0);
+	g_HUD.SetSize(170, 170);
+	g_SampleUI.SetLocation(0, 0);
+	g_SampleUI.SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
-	g_Camera.SetProjParams(D3DX_PI/4, fAspectRatio, 0.1f, 1000.0f);
+	g_Camera.SetProjParams(D3DX_PI/3, fAspectRatio, 0.1f, 1000.0f);
 	g_Camera.SetWindow(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-	//g_Camera.SetScalers(0.1f, 1.0f);
-	g_Camera.SetScalers();
+	g_Camera.SetScalers(0.1f, 1.0f);
+	//g_Camera.SetScalers();
 
 	g_Camera.SetEnableYAxisMovement(true);
 	g_Camera.SetEnablePositionMovement(true);
@@ -591,14 +605,31 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 		DXUT_ERR(L"Could not lock box model VB", hr);
 	}
 
+	int index = 0;
 	for (BYTE iZ = 0; iZ < g_sizeZ; iZ++)
 		for (BYTE iY = 0; iY < g_sizeY; iY++)
 			for (BYTE iX = 0; iX < g_sizeX; iX++)
 			{
-				g_vBoxInstance_Color[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX] = D3DCOLOR_ARGB(255, 255, 255, 255);
-				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].x = iX * 16 / 255.0f;// (i%g_sizeX) * 20 / 255.0f;
-				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+				if ((index > g_sizeX*g_sizeY*g_warstwa) && (index < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa)) {
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+					g_vBoxInstance_Position[index].x += g_sizeX * 16 / 255.0f;
+					g_vBoxInstance_Color[index].a = 1.0f;
+				}
+				else
+				{
+					//g_vBoxInstance_Color[index] = D3DCOLOR_ARGB(255, 255, 255, 255);
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+					g_vBoxInstance_Color[index].a = 0.0f;
+				}
+				index++;
+				//g_vBoxInstance_Color[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX] = D3DCOLOR_ARGB(255, 255, 255, 255);
+				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].x = iX * 16 / 255.0f;// (i%g_sizeX) * 20 / 255.0f;
+				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
 			}
 
 	//for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX*g_sizeY*g_sizeZ : g_NumBoxes); i++)
@@ -765,6 +796,10 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 
 		V(g_pEffect->EndPass());
 	}
+
+	V(g_HUD.OnRender(fElapsedTime));
+	V(g_SampleUI.OnRender(fElapsedTime));
+
 	V(g_pEffect->End());
 }
 
@@ -896,10 +931,10 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 				g_warstwa = g_sizeZ / 2;
 			}
 		}
-		else if (wParam == 82) // R key
-		{
-			g_warstwa = -1;
-		}
+		//else if (wParam == 82) // R key
+		//{
+		//	g_warstwa = -1;
+		//}
 		else if (wParam == 80) // P key
 		{
 			if ((g_warstwa  < g_sizeX-1 || g_warstwa == -1) && !g_toTransform)
