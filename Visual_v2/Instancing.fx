@@ -70,7 +70,7 @@ technique TShader_Instancing
     {
         ZEnable = true;
         //FillMode = Wireframe;
-        //CullMode = None;
+        CullMode = None;
         AlphaBlendEnable = TRUE;
         SrcBlend = SRCALPHA;
         DestBlend = INVSRCALPHA;

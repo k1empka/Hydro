@@ -36,6 +36,8 @@ unsigned int					g_sizeY = 20;
 unsigned int					g_sizeZ = 20;
 unsigned int					g_currentIteration = 0;
 
+bool							g_toTransform = false;
+bool							g_endedTransform = true;
 bool							g_fluxParam = true;
 bool							g_firstRender = true;
 bool							startSimulate = false;
@@ -678,7 +680,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 	V(g_pEffect->Begin(&cPasses, 0));
 
 	g_timeFrame += clock();
-	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 500)
+	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 200)
 	{
 		float maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
 		float minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
@@ -686,26 +688,58 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 		if (maxTmp - minTmp == 0.0f)
 			tmp = 255.0f;
 
-		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX*g_sizeY*g_sizeZ : g_NumBoxes); i++)
+		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX * g_sizeY*g_sizeZ : g_NumBoxes); i++)
 		{
 			g_vBoxInstance_Color[i].g = 0.0f;
 			g_vBoxInstance_Color[i].b = 1.0f - (((g_Iterations->iteration[g_currentIteration].point[i].intensity - minTmp)*tmp) / 255.0f);
 			g_vBoxInstance_Color[i].r = (g_Iterations->iteration[g_currentIteration].point[i].intensity - minTmp)*tmp / 255.0f;
-			if (g_warstwa == -1)
-				g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;
-			else
-			{
-				if ((i > g_sizeX*g_sizeY*g_warstwa) && (i < g_sizeX*g_sizeY + g_sizeX*g_sizeY*g_warstwa))
-					g_vBoxInstance_Color[i].a =  g_vBoxInstance_Color[i].r;
-				else
-					g_vBoxInstance_Color[i].a = 0.0f;
-			}
+
+			//if (g_warstwa == -1)
+			//	g_vBoxInstance_Color[i].a = 1.0f; //g_vBoxInstance_Color[i].r;
+			//else
+			//{
+			//	if (g_toTransform && (i > g_sizeX*g_sizeY*g_warstwa) && (i < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa))
+			//	{
+			//		g_vBoxInstance_Position[i].x += g_sizeX * 16 / 255.0f ;
+			//		//g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;
+			//	}
+			//	//else
+			//	//	g_vBoxInstance_Color[i].a = 1.0f;
+			//}
 		}
 		if (g_currentIteration < g_Iterations->IterationNum - 1 && startSimulate)
 			g_currentIteration++;
 		g_timeFrame = 0.0;
 	}
 
+	if (g_warstwa != -1 && g_toTransform)
+	{
+		DWORD index = 0;
+		for (BYTE iZ = 0; iZ < g_sizeZ; iZ++)
+			for (BYTE iY = 0; iY < g_sizeY; iY++)
+				for (BYTE iX = 0; iX < g_sizeX; iX++)
+				{
+					if ((index > g_sizeX*g_sizeY*g_warstwa) && (index < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa)) {
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+						g_vBoxInstance_Position[index].x += g_sizeX * 16 / 255.0f;
+						g_vBoxInstance_Color[index].a = 1.0f;
+					}
+					else
+					{
+						//g_vBoxInstance_Color[index] = D3DCOLOR_ARGB(255, 255, 255, 255);
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+						g_vBoxInstance_Color[index].a = 0.0f;
+					}
+					index++;
+				}
+
+		g_toTransform = false;
+		g_endedTransform = true;
+	}
 	
 	for (iPass = 0; iPass < cPasses; iPass++)
 	{
@@ -856,7 +890,11 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 		}
 		else if (wParam == 83) // S key
 		{
-			g_warstwa = g_sizeZ / 2;
+			if (!g_toTransform)
+			{
+				g_toTransform = true;
+				g_warstwa = g_sizeZ / 2;
+			}
 		}
 		else if (wParam == 82) // R key
 		{
@@ -864,13 +902,19 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 		}
 		else if (wParam == 80) // P key
 		{
-			if(g_warstwa < g_sizeZ || g_warstwa==-1)
+			if ((g_warstwa  < g_sizeX-1 || g_warstwa == -1) && !g_toTransform)
+			{
 				g_warstwa++;
+				g_toTransform = true;
+			}
 		}
 		else if (wParam == 79) // O key
 		{
-			if(g_warstwa > 0)
+			if (g_warstwa > 0 && !g_toTransform)
+			{
 				g_warstwa--;
+				g_toTransform = true;
+			}
 		}
 	}
 	g_Camera.HandleMessages(hWnd, uMsg, wParam, lParam);
