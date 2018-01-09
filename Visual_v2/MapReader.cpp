@@ -1,9 +1,10 @@
 #include "MapReader.h"
 
-MapReader::MapReader(char *path)
+MapReader::MapReader(char *path, bool fluxParam = false)
 {
 	this->_iterations = new Iterations();
 	this->pathC = path;
+	this->fluxParam = fluxParam;
 
 	ReadFile();
 }
@@ -19,7 +20,7 @@ void MapReader::ReadFile()
 	std::ifstream myfile(this->pathC, std::ios::binary);
 	
 	INT16 storage[5];
-	float cell;
+	float cell[2];
 
 	if (myfile.is_open())
 	{
@@ -39,50 +40,76 @@ void MapReader::ReadFile()
 		{
 			float maxInt = -1.0f;
 			float minInt = 100000.0f;
+			float maxFlu = -1000000.0f;
+			float minFlu = 1000000.0f;
 			for (int z = 0; z < this->_iterations->sizeZ; z++)
 			{
 				for (int y = 0; y < this->_iterations->sizeY; y++)
 				{
 					for (int x = 0; x < this->_iterations->sizeX; x++)
 					{
-						myfile.read((char*)(&cell), sizeof(size_cell));
+						if (this->fluxParam)
+						{
+							myfile.read((char*)(&cell), sizeof(size_cell) * 2);
+							this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].flux = cell[1];
+						}
+						else
+							myfile.read((char*)(&cell), sizeof(size_cell));
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX)+y*this->_iterations->sizeY + x].x = x;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].y = y;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].z = z;
-						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].intensity = cell;
-						if (cell > maxInt)
-							maxInt = cell;
-						if (cell < minInt)
-							minInt = cell;
+						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].intensity = cell[0];
+
+						if (cell[0] > maxInt)
+							maxInt = cell[0];
+						if (cell[0] <= minInt)
+							minInt = cell[0];
+
+						if (cell[1] > maxFlu)
+							maxFlu = cell[1];
+						if (cell[1] <= minFlu)
+							minFlu = cell[1];
 					}
 				}
 			}
 			this->_iterations->iteration[iter].elementsNum = this->_iterations->sizeX*this->_iterations->sizeY;
 			this->_iterations->iteration[iter].maxIntensity = maxInt;
 			this->_iterations->iteration[iter].minIntensity = minInt;
+			this->_iterations->iteration[iter].maxFlux = maxFlu;
+			this->_iterations->iteration[iter].minFlux = minFlu;
 		}
 
-		//myfile.read((char*)(&cell), sizeof(size_cell));
-		
-
-
-		/*while (std::getline(myfile, line))
-		{
-			if (!headerReaded)
-			{
-				if (!GetHeader(line))
-					throw std::invalid_argument("Can't read header");
-			}
-			else
-			{
-				if (!InterprateLine(line))
-					throw std::invalid_argument("Can't interprate line");
-			}
-		}*/
+		Normalize();
 	}
 	else
 	{
 		throw std::invalid_argument("File is not exists!");
+	}
+}
+
+void MapReader::Normalize()
+{
+	for (int iter = 0; iter < this->_iterations->IterationNum; iter++)
+	{
+		float minFluxAbs = 0.0f;
+		float minIntensityAbs = 0.0f;
+
+		if (this->fluxParam)
+		{
+			minFluxAbs = (this->_iterations->iteration[iter].minFlux < 0 ? abs(this->_iterations->iteration[iter].minFlux) : this->_iterations->iteration[iter].minFlux*(-1));
+			this->_iterations->iteration[iter].minFlux = 0.0f;
+			this->_iterations->iteration[iter].maxFlux += minFluxAbs;
+		}
+
+		minIntensityAbs = (this->_iterations->iteration[iter].minIntensity < 0 ? abs(this->_iterations->iteration[iter].minIntensity) : this->_iterations->iteration[iter].minIntensity*(-1));
+		this->_iterations->iteration[iter].minIntensity = 0.0f;
+		this->_iterations->iteration[iter].maxIntensity += minFluxAbs;
+
+		for (int index = 0; index < this->_iterations->sizeZ*this->_iterations->sizeY*this->_iterations->sizeX; index++)
+		{
+			this->_iterations->iteration[iter].point[index].flux += minFluxAbs;
+			this->_iterations->iteration[iter].point[index].intensity += minIntensityAbs;
+		}
 	}
 }
 

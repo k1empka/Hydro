@@ -22,23 +22,18 @@ CModelViewerCamera              g_Camera;
 //Iterations*						iterations = NULL;
 ID3DXEffect*                    g_pEffect = NULL;
 
-CDXUTDialog						g_HUD;
-CDXUTDialog                     g_SampleUI;
-
 D3DXHANDLE                      g_HandleTechnique;
 D3DXHANDLE                      g_HandleBoxInstance_Position;
 D3DXHANDLE                      g_HandleBoxInstance_Color;
 D3DXHANDLE                      g_HandleWorld, g_HandleView, g_HandleProjection;
 D3DXHANDLE                      g_HandleTexture;
 
+unsigned int					g_warstwa = -1;
 unsigned int					g_sizeX = 20;
 unsigned int					g_sizeY = 20;
 unsigned int					g_sizeZ = 20;
 unsigned int					g_currentIteration = 0;
-unsigned int					g_warstwa = -1;
 
-bool							g_toTransform = false;
-bool							g_endedTransform = true;
 bool							g_fluxParam = true;
 bool							g_firstRender = true;
 bool							startSimulate = false;
@@ -49,7 +44,6 @@ const int                       g_nNumBatchInstance = 120;
 int                             g_NumBoxes = 1000000;
 double                          g_fLastTime = 0.0;
 double                          g_fBurnAmount = 0.0;
-int								g_ParameterToShow = 0;
 clock_t							g_timeFrame = 0.0;
 
 D3DXCOLOR						g_vBoxInstance_Color[g_nMaxBoxes];
@@ -90,8 +84,6 @@ struct BOX_INSTANCEDATA_POS
 	BYTE rotation;
 };
 
-#define IDC_RENDERMETHOD_LIST   1
-#define IDC_STATIC              10
 
 Iterations*						g_Iterations;
 
@@ -127,7 +119,6 @@ D3DVERTEXELEMENT9 g_VertexElemConstants[] =
 
 bool CALLBACK IsD3D9DeviceAcceptable(D3DCAPS9* pCaps, D3DFORMAT AdapterFormat, D3DFORMAT BackBufferFormat,
 	bool bWindowed, void* pUserContext);
-void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
 bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext )
 {
@@ -245,24 +236,7 @@ INT WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR argv, int )
 
 void InitApp()
 {
-	g_SampleUI.Init(&g_DialogResourceManager);
 	g_SettingsDlg.Init(&g_DialogResourceManager);
-	g_HUD.Init(&g_DialogResourceManager);
-
-	g_SampleUI.SetCallback(OnGUIEvent); int iY = 24;
-
-	g_SampleUI.AddComboBox(IDC_RENDERMETHOD_LIST, 0, 0, 166, 22);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetDropHeight(12 * 4);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Intensity", NULL);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Flux", NULL);
-	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetSelectedByIndex(g_ParameterToShow);
-
-	g_SampleUI.AddStatic(IDC_STATIC, L"P - Next slice\nO - previous slice\nS - center slice\nI - Start/Stop simulation\nU - reset simulation", 0, 100, 200, 300);
-
-	g_HUD.SetCallback(OnGUIEvent); iY = 10;
-
-	g_warstwa = g_sizeZ / 2;
-
 }
 
 HRESULT CALLBACK OnD3D9CreateDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFACE_DESC* pBackBufferSurfaceDesc,
@@ -445,18 +419,12 @@ HRESULT CALLBACK OnD3D9ResetDevice(IDirect3DDevice9* pd3dDevice, const D3DSURFAC
 
 	if (g_pEffect)
 		V_RETURN(g_pEffect->OnResetDevice());
-	
-	g_HUD.SetLocation(pBackBufferSurfaceDesc->Width - 170, 0);
-	g_HUD.SetSize(170, 170);
-	g_SampleUI.SetLocation(0, 0);
-	g_SampleUI.SetSize(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-
 
 	float fAspectRatio = pBackBufferSurfaceDesc->Width / (FLOAT)pBackBufferSurfaceDesc->Height;
-	g_Camera.SetProjParams(D3DX_PI/3, fAspectRatio, 0.1f, 1000.0f);
+	g_Camera.SetProjParams(D3DX_PI/4, fAspectRatio, 0.1f, 1000.0f);
 	g_Camera.SetWindow(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-	g_Camera.SetScalers(0.1f, 1.0f);
-	//g_Camera.SetScalers();
+	//g_Camera.SetScalers(0.1f, 1.0f);
+	g_Camera.SetScalers();
 
 	g_Camera.SetEnableYAxisMovement(true);
 	g_Camera.SetEnablePositionMovement(true);
@@ -581,13 +549,13 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 				FillFaceInstance(pVerts, pIndices, 4,
 					D3DXVECTOR3(0.f, 1.f, 0.f),
 					D3DXVECTOR3(0.f, 1.f, 0.f),
-					D3DXVECTOR3(1.f, 0.f, 0.f),
+					D3DXVECTOR3(0.f, 1.f, 0.f),
 					iInstance);
 
 				FillFaceInstance(pVerts, pIndices, 5,
 					D3DXVECTOR3(0.f, -1.f, 0.f),
 					D3DXVECTOR3(0.f, -1.f, 0.f),
-					D3DXVECTOR3(1.f, 0.f, 0.f),
+					D3DXVECTOR3(0.f, 1.f, 0.f),
 					iInstance);
 			}
 
@@ -604,31 +572,13 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 		DXUT_ERR(L"Could not lock box model VB", hr);
 	}
 
-	int index = 0;
 	for (BYTE iZ = 0; iZ < g_sizeZ; iZ++)
 		for (BYTE iY = 0; iY < g_sizeY; iY++)
 			for (BYTE iX = 0; iX < g_sizeX; iX++)
 			{
-				if ((index > g_sizeX*g_sizeY*g_warstwa) && (index < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa)) {
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-					g_vBoxInstance_Position[index].x += g_sizeX * 16 / 255.0f;
-					g_vBoxInstance_Color[index].a = 1.0f;
-				}
-				else
-				{
-					//g_vBoxInstance_Color[index] = D3DCOLOR_ARGB(255, 255, 255, 255);
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-					g_vBoxInstance_Color[index].a = 0.0f;
-				}
-				index++;
-				//g_vBoxInstance_Color[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX] = D3DCOLOR_ARGB(255, 255, 255, 255);
-				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].x = iX * 16 / 255.0f;// (i%g_sizeX) * 20 / 255.0f;
-				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-				//g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].x = iX * 16 / 255.0f;// (i%g_sizeX) * 20 / 255.0f;
+				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+				g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY*g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
 			}
 
 	//for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX*g_sizeY*g_sizeZ : g_NumBoxes); i++)
@@ -710,82 +660,35 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 	V(g_pEffect->Begin(&cPasses, 0));
 
 	g_timeFrame += clock();
-	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 200)
+	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 500)
 	{
-		float tmp = -1;
-		float maxTmp = -1;
-		float minTmp = -1;
+		float maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
+		float minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
+		float tmp = 255.0f / (maxTmp - minTmp);
+		if (maxTmp - minTmp)
+			tmp = 255.0f;
 
-		if (g_ParameterToShow == 0)
-		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
-			minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
-			tmp = 255.0f / (maxTmp - minTmp);
-			if (maxTmp - minTmp == 0.0f)
-				tmp = 255.0f;
-		}
-		else if (g_ParameterToShow == 1)
-		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
-			minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
-			tmp = 255.0f / (maxTmp - minTmp);
-			if (maxTmp - minTmp == 0.0f)
-				tmp = 255.0f;
-		}
-
-		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX * g_sizeY*g_sizeZ : g_NumBoxes); i++)
+		for (unsigned int i = 0; i < (g_sizeX*g_sizeY*g_sizeZ < g_NumBoxes ? g_sizeX*g_sizeY*g_sizeZ : g_NumBoxes); i++)
 		{
 			g_vBoxInstance_Color[i].g = 0.0f;
 			g_vBoxInstance_Color[i].b = 1.0f - (((g_Iterations->iteration[g_currentIteration].point[i].intensity - minTmp)*tmp) / 255.0f);
 			g_vBoxInstance_Color[i].r = (g_Iterations->iteration[g_currentIteration].point[i].intensity - minTmp)*tmp / 255.0f;
-
-			//if (g_warstwa == -1)
-			//	g_vBoxInstance_Color[i].a = 1.0f; //g_vBoxInstance_Color[i].r;
-			//else
-			//{
-			//	if (g_toTransform && (i > g_sizeX*g_sizeY*g_warstwa) && (i < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa))
-			//	{
-			//		g_vBoxInstance_Position[i].x += g_sizeX * 16 / 255.0f ;
-			//		//g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;
-			//	}
-			//	//else
-			//	//	g_vBoxInstance_Color[i].a = 1.0f;
-			//}
+			if (g_warstwa == -1)
+				g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;
+			else
+			{
+				if ((i > g_sizeX*g_sizeY*g_warstwa) && (i < g_sizeX*g_sizeY + g_sizeX*g_sizeY*g_warstwa))
+					g_vBoxInstance_Color[i].a = g_vBoxInstance_Color[i].r;// +0.3f;
+				else
+					g_vBoxInstance_Color[i].a = 0.0f;
+			}
 		}
 		if (g_currentIteration < g_Iterations->IterationNum - 1 && startSimulate)
 			g_currentIteration++;
 		g_timeFrame = 0.0;
 	}
 
-	if (g_warstwa != -1 && g_toTransform)
-	{
-		DWORD index = 0;
-		for (BYTE iZ = 0; iZ < g_sizeZ; iZ++)
-			for (BYTE iY = 0; iY < g_sizeY; iY++)
-				for (BYTE iX = 0; iX < g_sizeX; iX++)
-				{
-					if ((index > g_sizeX*g_sizeY*g_warstwa) && (index < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa)) {
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-						g_vBoxInstance_Position[index].x += g_sizeX * 16 / 255.0f;
-						g_vBoxInstance_Color[index].a = 1.0f;
-					}
-					else
-					{
-						//g_vBoxInstance_Color[index] = D3DCOLOR_ARGB(255, 255, 255, 255);
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
-						g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-						g_vBoxInstance_Color[index].a = 0.0f;
-					}
-					index++;
-				}
 
-		g_toTransform = false;
-		g_endedTransform = true;
-	}
-	
 	for (iPass = 0; iPass < cPasses; iPass++)
 	{
 		V(g_pEffect->BeginPass(iPass));
@@ -797,7 +700,8 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 		{         
 			int nRenderBoxes = min(nRemainingBoxes, g_nNumBatchInstance);
 
-			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Position, g_vBoxInstance_Position + g_NumBoxes - nRemainingBoxes, nRenderBoxes));
+			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Position, g_vBoxInstance_Position + g_NumBoxes -
+				nRemainingBoxes, nRenderBoxes));
 			V(g_pEffect->SetVectorArray(g_HandleBoxInstance_Color, (D3DXVECTOR4*)
 				(g_vBoxInstance_Color + g_NumBoxes - nRemainingBoxes), nRenderBoxes));
 
@@ -810,10 +714,6 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 
 		V(g_pEffect->EndPass());
 	}
-
-	V(g_HUD.OnRender(fElapsedTime));
-	V(g_SampleUI.OnRender(fElapsedTime));
-
 	V(g_pEffect->End());
 }
 
@@ -939,57 +839,24 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 		}
 		else if (wParam == 83) // S key
 		{
-			if (!g_toTransform)
-			{
-				g_toTransform = true;
-				g_warstwa = g_sizeZ / 2;
-			}
+			g_warstwa = g_sizeZ / 2;
 		}
-		//else if (wParam == 82) // R key
-		//{
-		//	g_warstwa = -1;
-		//}
+		else if (wParam == 82) // R key
+		{
+			g_warstwa = -1;
+		}
 		else if (wParam == 80) // P key
 		{
-			if ((g_warstwa  < g_sizeX-1 || g_warstwa == -1) && !g_toTransform)
-			{
+			if(g_warstwa < g_sizeZ || g_warstwa==-1)
 				g_warstwa++;
-				g_toTransform = true;
-			}
 		}
 		else if (wParam == 79) // O key
 		{
-			if (g_warstwa > 0 && !g_toTransform)
-			{
+			if(g_warstwa > 0)
 				g_warstwa--;
-				g_toTransform = true;
-			}
 		}
 	}
-
-	*pbNoFurtherProcessing = g_SampleUI.MsgProc(hWnd, uMsg, wParam, lParam);
-	if (*pbNoFurtherProcessing)
-		return 0;
-
 	g_Camera.HandleMessages(hWnd, uMsg, wParam, lParam);
 
 	return 0;
-}
-
-void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
-{
-	WCHAR szMessage[100];
-	switch (nControlID)
-	{
-		case IDC_RENDERMETHOD_LIST:
-		{
-			DXUTComboBoxItem* pCBItem = g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->GetSelectedItem();
-			g_ParameterToShow = wcscmp(pCBItem->strText, L"Intensity") == 0 ? 0 :
-				wcscmp(pCBItem->strText, L"Flux") == 0 ? 1 : -1;
-
-			OnDestroyBuffers();
-			OnCreateBuffers(DXUTGetD3D9Device());
-			break;
-		}
-	}
 }

@@ -9,15 +9,16 @@
 void printHelp()
 {
 	printf("hydro [options]\n"
-			"--device <type>\t run simulation on GPU, types:\n"
+			"--device <type>\trun simulation on GPU, types:\n"
 			"\t\tGLOBAL, SURFACE, SHARED, SHARED_FOR\n"
-			"--host\t run simulation on CPU\n"
-			"--X <size>\t X map size\n"
-			"--Y <size>\t Y map size\n"
-			"--Z <size>\t Z map size\n"
-			"--ITER <num>\t number of iterations\n"
-			"--save\t\t save all iterations to file, default only last\n"
-			"--help\t\t displays this massage\n"
+			"--host\t\trun simulation on CPU\n"
+			"--X <size>\tX space size\n"
+			"--Y <size>\tY space size\n"
+			"--Z <size>\tZ space size\n"
+			"--ITER <num>\tnumber of iterations\n"
+			"--save\t\tsave all iterations to file, default only last\n"
+			"--help\t\tdisplays this massage\n"
+			"--random\tstarting space values are random\n"
 			"if there is no arguments provided default values are:\n"
 			"\thydro --device GLOBAL --X 100 --Y 100 --Z 100 --ITER 10\n");
 }
@@ -36,6 +37,7 @@ StartArgs parsInputArguments(const int argc, char *argv[])
 	args.host = hostSimulationType::NONE;
 	args.type = deviceSimulationType::NONE;
 	args.print = false;
+	args.random = false;
 
 	for(int i=1; i<argc; ++i)
 	{
@@ -62,6 +64,10 @@ StartArgs parsInputArguments(const int argc, char *argv[])
                 args.host = hostSimulationType::OCTREE;
             else
                 args.host = hostSimulationType::NONE;
+		}
+		else if(strcmp(argv[i],"--random") == 0)
+		{
+			args.host = true;
 		}
 		else if(strcmp(argv[i],"--X") == 0)
 		{

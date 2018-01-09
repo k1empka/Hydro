@@ -8,12 +8,13 @@ class Point
 public:
 	float x, y, z;
 	float intensity;
+	float flux;
 };
 
 class Iteration
 {
 public:
-	float minIntensity, maxIntensity;
+	float minIntensity, maxIntensity, minFlux, maxFlux;
 	unsigned int elementsNum;
 	Point *point;
 };
@@ -31,17 +32,19 @@ class MapReader
 private:
 	Iterations*	_iterations;
 	char *pathC;
+	bool fluxParam;
 
 	int index = 0, local_x = 0, local_y = 0, currentIter = 0;
 	float maxInten = -1.0f, minInten = 10000.0f;
 
 public:
-	MapReader(char *path);
+	MapReader(char *path, bool fluxParam);
 	~MapReader();
 	Iterations* MapReader::GetIterations();
 
 private:
 	void MapReader::ReadFile();
+	void MapReader::Normalize();
 	bool MapReader::GetHeader(std::string line);
 	bool MapReader::InterprateLine(std::string line);
 	unsigned int MapReader::split(const std::string &txt, std::vector<std::string> &strs, char ch);

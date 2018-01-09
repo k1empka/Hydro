@@ -70,7 +70,7 @@ Fraction* initSpace(StartArgs args,const bool random)
 	}
 
 	//IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFERENT RESULT EACH TIME
-	if(true==random)
+	if(true==args.random)
 		srand(time(NULL));
 
     const int3 mid = make_int3(args.X_SIZE / 2, args.Y_SIZE / 2, args.Z_SIZE / 2);
