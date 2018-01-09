@@ -92,24 +92,20 @@ __global__ void stepShared3DLayerForIn(StartArgs args, FluidParams* params, Frac
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     __shared__ Fraction shSpace[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4];
-    __syncthreads(); // wait for constructors
-
     Fraction zpp, zp, zc, zn, znn;
 
     if(x<args.X_SIZE && y<args.Y_SIZE)
     {
-#pragma unroll
         for (int z = 2; z < args.Z_SIZE - 2; ++z)
         {
             const int idx = args.IDX_3D(x,y,z);
             fillShMem(args, make_int3(x, y, z), spaceData, shSpace);
-            __syncthreads(); // wait for threads to fill whole shared memory
 
             if (z == 2)
             {
                 zpp = spaceData[args.IDX_3D(x, y, z - 2)];
                 zp = spaceData[args.IDX_3D(x, y, z - 1)];
-                zc = shSpace[threadIdx.x+2][threadIdx.y+2];
+                zc = spaceData[args.IDX_3D(x, y, z - 1)];
                 zn = spaceData[args.IDX_3D(x, y, z + 1)];
             }
             znn = spaceData[args.IDX_3D(x, y, z + 2)];
@@ -117,12 +113,7 @@ __global__ void stepShared3DLayerForIn(StartArgs args, FluidParams* params, Frac
             __syncthreads(); // wait for threads to fill whole shared memory
 
                              // Calculate cell  with data from shared memory (Layer part x,y)
-            resultData[idx] = resultZ(params, zpp,
-                                              zp,
-                                              zc,
-                                              zn, 
-                                              znn, 
-                                              shSpace);
+            resultData[idx] = resultZ(params, zpp,zp,zc,zn,znn,shSpace);
             zpp = zp;
             zp = zc;
             zc = zn;
@@ -231,18 +222,126 @@ void simulation(StartArgs args, FluidParams* pars, void* space,void* result)
 {
     switch(args.type)
     {
-    case GLOBAL:
+    case deviceSimulationType::GLOBAL:
         simulationGlobal(args,pars,(Fraction*)space,(Fraction*)result);
         break;
-    case SHARED_3D_LAYER:
+    case deviceSimulationType::SHARED_3D_LAYER:
         simulationShared3dLayer(args,pars, (Fraction*)space,(Fraction*)result);
         break;
-    case SHARED_3D_LAYER_FOR_IN:
+    case deviceSimulationType::SHARED_3D_LAYER_FOR_IN:
         simulationShared3dLayerForIn(args,pars, (Fraction*)space,(Fraction*)result);
         break;
     }
     cudaCheckErrors("step failed!");
 }
 
+Fraction* execDeviceSurface(StartArgs args, FluidParams* params, Fraction* space)
+{
+    float* floats = spaceToFloats(args, space);
+    Printer* bytePrinter = NULL;
 
+    // For float we could create a channel with:
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+
+    // Allocate memory in device
+    cudaExtent extent = make_cudaExtent(args.X_SIZE * 5, args.Y_SIZE, args.Z_SIZE);
+    cudaArray* cuSpaceArray;
+    cudaMalloc3DArray(&cuSpaceArray, &channelDesc, extent, cudaArraySurfaceLoadStore);
+    cudaArray* cuResultArray;
+    cudaMalloc3DArray(&cuResultArray, &channelDesc, extent, cudaArraySurfaceLoadStore);
+
+    // Copy to device memory initial data
+    cudaMemcpy3DParms copyParams = { 0 };
+    copyParams.srcPtr = make_cudaPitchedPtr((void*)floats, args.X_SIZE * sizeof(float) * 5, args.Y_SIZE, args.Z_SIZE);
+    copyParams.dstArray = cuSpaceArray;
+    copyParams.extent = extent;
+    copyParams.kind = cudaMemcpyHostToDevice;
+
+    cudaMemcpy3D(&copyParams);
+
+    // Specify surface
+    struct cudaResourceDesc resDesc;
+    memset(&resDesc, 0, sizeof(resDesc));
+    resDesc.resType = cudaResourceTypeArray;
+
+    // Create the surface objects
+    resDesc.res.array.array = cuSpaceArray;
+    cudaSurfaceObject_t spaceSurfObj = 0;
+    cudaCreateSurfaceObject(&spaceSurfObj, &resDesc);
+    resDesc.res.array.array = cuResultArray;
+    cudaSurfaceObject_t resultSurfObj = 0;
+    cudaCreateSurfaceObject(&resultSurfObj, &resDesc);
+
+    void *resultObjPointer = &resultSurfObj, *spaceObjPointer = &spaceSurfObj;
+    int i = 0;
+
+    if (args.print)
+        bytePrinter = new Printer("device.data", args);
+
+    printf("Simulation started\n");
+    Timer::getInstance().start("Device simulation time");
+
+    for (; i<args.NUM_OF_ITERATIONS; ++i)
+    {
+        simulationSurface(args, params, *(cudaSurfaceObject_t*)spaceObjPointer, *(cudaSurfaceObject_t*)resultObjPointer);
+        swapPointers(spaceObjPointer, resultObjPointer);
+
+        if (args.print)
+        {
+            copyParams = { 0 };
+            copyParams.extent = extent;
+            copyParams.dstPtr = make_cudaPitchedPtr((void*)floats, args.X_SIZE * sizeof(float) * 5, args.Y_SIZE, args.Z_SIZE);
+            copyParams.kind = cudaMemcpyDeviceToHost;
+            if (i % 2 == 0)
+            {
+                copyParams.srcArray = cuSpaceArray;
+                cudaMemcpy3D(&copyParams);
+            }
+            else
+            {
+                copyParams.srcArray = cuResultArray;
+                cudaMemcpy3D(&copyParams);
+            }
+            floatsToSpace(args, floats, space);
+            bytePrinter->printIteration(space, i);
+        }
+    }
+    if (!args.print)
+    {
+        copyParams = { 0 };
+        copyParams.extent = extent;
+        copyParams.dstPtr = make_cudaPitchedPtr((void*)floats, args.X_SIZE * sizeof(float) * 5, args.Y_SIZE, args.Z_SIZE);
+        copyParams.kind = cudaMemcpyDeviceToHost;
+        if (i % 2 == 0)
+        {
+            copyParams.srcArray = cuSpaceArray;
+            cudaMemcpy3D(&copyParams);
+        }
+        else
+        {
+            copyParams.srcArray = cuResultArray;
+            cudaMemcpy3D(&copyParams);
+        }
+    }
+    Timer::getInstance().stop("Device simulation time");
+    printf("Simulation completed\n");
+    Timer::getInstance().printResults();
+
+    // Destroy surface objects
+    cudaDestroySurfaceObject(spaceSurfObj);
+    cudaDestroySurfaceObject(resultSurfObj);
+
+    // Free device memory
+    cudaFreeArray(cuSpaceArray);
+    cudaFreeArray(cuResultArray);
+
+    floatsToSpace(args, floats, space);
+
+    //free temporary memory
+    free(floats);
+
+    if (bytePrinter) delete bytePrinter;
+
+    return space;
+}
 

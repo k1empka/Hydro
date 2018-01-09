@@ -6,6 +6,7 @@
  */
 #include "utils.h"
 #include "Fraction.h"
+#include "octreemanger.h"
 #include <helper_cuda.h>
 #include <time.h>
 #include <cuda_runtime.h>
@@ -37,6 +38,28 @@ void initCuda()
         cudaSetDevice(1); //Dla mnie bo mam SLI;
 }
 
+Fraction createFraction(bool random)
+{
+    Fraction f;
+    if (true == random)
+    {
+        f.E = (float)(rand() % MAX_START_FORCE + 1);
+        f.R = (float)(rand() % MAX_START_FORCE + 1);
+        f.Vx = (float)(MAX_VELOCITY%rand());
+        f.Vy = 0.0f;
+        f.Vz = 0.0f;
+    }
+    else
+    {
+        f.E = (float)MAX_START_FORCE;
+        f.R = (float)MAX_START_FLUX;
+        f.Vx = (float)MAX_VELOCITY;
+        f.Vy = 0.0f;
+        f.Vz = 0.0f;
+    }
+    return f;
+}
+
 Fraction* initSpace(StartArgs args,const bool random)
 {
     Fraction* space = new Fraction[args.SIZE()];
@@ -58,28 +81,32 @@ Fraction* initSpace(StartArgs args,const bool random)
 	for(int z=start.z; z < end.z;++z)
         for (int y = start.y; y < end.y; ++y)
             for (int x = start.x; x < end.x; ++x)
-	        {
-                int i = args.IDX_3D(x, y, z);
-		        if(true==random)
-		        {
-			        space[i].E = (float)(rand() % MAX_START_FORCE + 1);
-			        space[i].R = (float)(rand() % MAX_START_FORCE + 1);
-			        space[i].Vx= (float)(MAX_VELOCITY%rand());
-			        space[i].Vy= 0.0f;
-			        space[i].Vz= 0.0f;
-		        }
-		        else
-		        {
-			        space[i].E = (float)MAX_START_FORCE;
-			        space[i].R = (float)MAX_START_FLUX;
-			        space[i].Vx= (float)MAX_VELOCITY;
-			        space[i].Vy= 0.0f;
-			        space[i].Vz= 0.0f;
-		        }
-	        }
-
+                space[args.IDX_3D(x, y, z)] = createFraction(random);
+	        
 	return space;
 }
+
+OctreeManger initSOctree(StartArgs args, const bool random)
+{
+    OctreeManger octree(args);
+
+    //IF RANDOM FLAG IS SET THEN INIT SPACE HAS DIFFERENT RESULT EACH TIME
+    if (true == random)
+        srand(time(NULL));
+
+    const int3 mid = make_int3(args.X_SIZE / 2, args.Y_SIZE / 2, args.Z_SIZE / 2);
+    const int3 rad = make_int3(args.X_SIZE / 6, args.Y_SIZE / 6, args.Z_SIZE / 6);
+    const int3 start = make_int3(mid.x - rad.x, mid.y - rad.y, mid.z - rad.z);
+    const int3 end = make_int3(mid.x + rad.x, mid.y + rad.y, mid.z + rad.z);
+
+    for (int z = start.z; z < end.z; ++z)
+        for (int y = start.y; y < end.y; ++y)
+            for (int x = start.x; x < end.x; ++x)
+                octree.insertFract(new Fraction(createFraction(random)),x,y,z);
+
+    return octree;
+}
+
 
 void swapPointers(void*& p1,void*& p2)
 {

@@ -56,5 +56,7 @@ void Printer::printIteration(Fraction* space, int iter)
 	{
 		v = space[i].E;
 		fwrite(&v,floatSize,1,f);
+        v = space[i].R;
+        fwrite(&v, floatSize, 1, f);
 	}
 }
