@@ -45,9 +45,9 @@ Fraction createFraction(bool random)
     {
         f.E = (float)(rand() % MAX_START_FORCE + 1);
         f.R = (float)(rand() % MAX_START_FORCE + 1);
-        f.Vx = (float)(MAX_VELOCITY%rand());
-        f.Vy = 0.0f;
-        f.Vz = 0.0f;
+        f.Vx = (float)(rand()%MAX_VELOCITY);
+        f.Vy = (float)(rand() % MAX_VELOCITY);
+        f.Vz = 0;
     }
     else
     {
@@ -60,7 +60,7 @@ Fraction createFraction(bool random)
     return f;
 }
 
-Fraction* initSpace(StartArgs args,const bool random)
+Fraction* initSpace(StartArgs args)
 {
     Fraction* space = new Fraction[args.SIZE()];
 	if(nullptr==space)
@@ -73,15 +73,15 @@ Fraction* initSpace(StartArgs args,const bool random)
 	if(true==args.random)
 		srand(time(NULL));
 
-    const int3 mid = make_int3(args.X_SIZE / 2, args.Y_SIZE / 2, args.Z_SIZE / 2);
-    const int3 rad = make_int3(args.X_SIZE / 6, args.Y_SIZE / 6, args.Z_SIZE / 6);
+    const int3 mid = make_int3(15, args.Y_SIZE / 2, args.Z_SIZE / 2);
+    const int3 rad = make_int3(5, args.Y_SIZE /6, args.Z_SIZE / 6);
     const int3 start = make_int3(mid.x - rad.x, mid.y - rad.y, mid.z - rad.z);
     const int3 end = make_int3(mid.x + rad.x, mid.y + rad.y, mid.z + rad.z);
 
 	for(int z=start.z; z < end.z;++z)
         for (int y = start.y; y < end.y; ++y)
             for (int x = start.x; x < end.x; ++x)
-                space[args.IDX_3D(x, y, z)] = createFraction(random);
+                space[args.IDX_3D(x, y, z)] = createFraction(args.random);
 	        
 	return space;
 }

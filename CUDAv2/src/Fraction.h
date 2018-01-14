@@ -4,7 +4,7 @@
 #include <memory>
 
 class Fraction;
-typedef std::unique_ptr<Fraction> FractionPtr;
+typedef std::shared_ptr<Fraction> FractionPtr;
 
 enum class eDim
 {

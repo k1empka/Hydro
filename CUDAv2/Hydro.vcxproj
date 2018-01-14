@@ -22,7 +22,9 @@
     <ClInclude Include="src\computation.h" />
     <ClInclude Include="src\customTimer.h" />
     <ClInclude Include="src\exec.h" />
-    <ClInclude Include="src\exechost.cpp" />
+    <ClCompile Include="src\exechost.cu">
+      <FileType>CppCode</FileType>
+    </ClCompile>
     <ClInclude Include="src\Fraction.h" />
     <ClInclude Include="src\octreemanger.h" />
     <ClInclude Include="src\octree\array.h" />
@@ -37,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
-    <ClCompile Include="src\execdevice.cpp" />
+    <ClCompile Include="src\execdevice.cu" />
     <ClCompile Include="src\hostComputation.cpp" />
     <ClCompile Include="src\octreemanger.cpp" />
     <ClCompile Include="src\printer.cpp" />

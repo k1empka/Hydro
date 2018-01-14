@@ -13,7 +13,7 @@ Fraction* execHost(StartArgs args)
         exit(-1);
     }
 
-    space = initSpace(args, RANDOM);
+    space = initSpace(args);
     if (args.print)
         bytePrinter = new Printer("host.data", args);
 
@@ -49,5 +49,5 @@ Fraction* execHost(StartArgs args)
 
 Fraction* execHostOctree(StartArgs args)
 {
-
+    return nullptr;
 }

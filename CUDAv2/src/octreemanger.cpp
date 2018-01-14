@@ -2,9 +2,9 @@
 
 
 
-OctreeManger::OctreeManger(StartArgs args)
+OctreeManger::OctreeManger(StartArgs args) : 
+    tree(args.X_SIZE, nullptr)
 {
-    tree = Octree<Fraction*>(args.X_SIZE, nullptr);
 }
 
 

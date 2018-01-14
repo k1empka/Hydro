@@ -710,7 +710,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 	V(g_pEffect->Begin(&cPasses, 0));
 
 	g_timeFrame += clock();
-	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 200)
+	if ((g_timeFrame / (double)CLOCKS_PER_SEC) > 400)
 	{
 		float tmp = -1;
 		float maxTmp = -1;

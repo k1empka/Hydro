@@ -30,7 +30,7 @@ StartArgs parsInputArguments(const int argc, char *argv[])
 	int x,y,z,iter_num;
 
 	//default simulation settings
-	args.NUM_OF_ITERATIONS = 10;
+	args.NUM_OF_ITERATIONS = 50;
 	args.X_SIZE = 100;
 	args.Y_SIZE = 100;
 	args.Z_SIZE = 100;
@@ -67,7 +67,7 @@ StartArgs parsInputArguments(const int argc, char *argv[])
 		}
 		else if(strcmp(argv[i],"--random") == 0)
 		{
-			args.host = true;
+            args.random = true;
 		}
 		else if(strcmp(argv[i],"--X") == 0)
 		{
@@ -152,10 +152,10 @@ int main(int argc, char *argv[])
     if(args.host != hostSimulationType::NONE)
     {
         hostOutputSpace = execHost(args);
-        compare_results(args,hostOutputSpace,deviceOutputSpace);
         free(hostOutputSpace);
     }
+    if (args.type != deviceSimulationType::NONE && args.host != hostSimulationType::NONE)
+        compare_results(args, hostOutputSpace, deviceOutputSpace);
 
-    free(deviceOutputSpace);
     return 0;
 }

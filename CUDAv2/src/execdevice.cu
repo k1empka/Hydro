@@ -112,7 +112,7 @@ Fraction* execDeviceSurface(StartArgs args, FluidParams* params, Fraction* space
 
 Fraction* execDevice(StartArgs args)
 {
-    Fraction* space = initSpace(args, RANDOM);
+    Fraction* space = initSpace(args);
     Printer* bytePrinter = NULL;
     FluidParams *d_params, params = initParams();
     cudaMalloc((void **)&d_params, sizeof(FluidParams));

@@ -8,8 +8,6 @@
 #include "printer.h"
 #include "Fraction.h"
 
-#define RANDOM false
-
 Fraction* execDeviceSurface(StartArgs args, FluidParams* params, Fraction* space);
 Fraction* execDevice(StartArgs args);
 Fraction* execHost(StartArgs args);

@@ -9,8 +9,8 @@
 //#define Z_SIZE 100
 //#define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
-#define MAX_START_FORCE 100
-#define MAX_START_FLUX 100
+#define MAX_START_FORCE 150
+#define MAX_START_FLUX 150
 #define MAX_VELOCITY 5
 
   
