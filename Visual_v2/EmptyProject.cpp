@@ -35,10 +35,10 @@ unsigned int					g_sizeX = 20;
 unsigned int					g_sizeY = 20;
 unsigned int					g_sizeZ = 20;
 unsigned int					g_currentIteration = 0;
-unsigned int					g_warstwa = -1;
-unsigned int					g_axis = 1; // 0 - x, 1 - y, 2 - z
+unsigned int					g_warstwa = 0;
+unsigned int					g_axis = 3; // 0 - x, 1 - y, 2 - z
 
-bool							g_toTransform = false;
+bool							g_toTransform = true;
 bool							g_endedTransform = true;
 bool							g_fluxParam = true;
 bool							g_firstRender = true;
@@ -258,7 +258,7 @@ void InitApp()
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->AddItem(L"Flux", NULL);
 	g_SampleUI.GetComboBox(IDC_RENDERMETHOD_LIST)->SetSelectedByIndex(g_ParameterToShow);
 
-	g_SampleUI.AddStatic(IDC_STATIC, L"P - Next slice\nO - previous slice\nS - center slice\nI - Start/Stop simulation\nU - reset simulation\n1 - X axis\n2 - Y axis\n3 - Z axis", 0, 100, 200, 300);
+	g_SampleUI.AddStatic(IDC_STATIC, L"P - Next slice\nO - previous slice\nS - center slice\nI - Start/Stop simulation\nU - reset simulation\n1 - X axis\n2 - Y axis\n3 - Z axis\n4 - All axis", 0, 100, 200, 300);
 
 	g_HUD.SetCallback(OnGUIEvent); iY = 10;
 
@@ -815,6 +815,23 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Color[index].a = 0.0f;
 						}
 					}
+					else if (g_axis == 3)
+					{
+						if (iY == g_warstwa || iX == g_warstwa || (index > g_sizeX*g_sizeY*g_warstwa) && (index < g_sizeX*g_sizeY + g_sizeX * g_sizeY*g_warstwa))
+						{
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+							g_vBoxInstance_Color[index].a = 0.8f;
+						}
+						else
+						{
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
+							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
+							g_vBoxInstance_Color[index].a = 0.0f;
+						}
+					}
 					index++;
 				}
 
@@ -1011,9 +1028,14 @@ LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 			g_axis = 1;
 			g_toTransform = true;
 		}
-		else if (wParam == 51) // 4 num
+		else if (wParam == 51) // 3 num
 		{
 			g_axis = 2;
+			g_toTransform = true;
+		}
+		else if (wParam == 52) // 4 num
+		{
+			g_axis = 3;
 			g_toTransform = true;
 		}
 	}
