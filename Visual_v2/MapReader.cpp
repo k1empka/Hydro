@@ -3,6 +3,10 @@
 MapReader::MapReader(char *path, bool fluxParam = false)
 {
 	this->_iterations = new Iterations();
+	this->_iterations->maxFlux = -1000000.0f;
+	this->_iterations->maxIntensity = -1000000.0f;
+	this->_iterations->minFlux = 1000000.0f;
+	this->_iterations->minIntensity = 1000000.0f;
 	this->pathC = path;
 	this->fluxParam = fluxParam;
 
@@ -38,7 +42,7 @@ void MapReader::ReadFile()
 
 		for (int iter = 0; iter < this->_iterations->IterationNum; iter++)
 		{
-			float maxInt = -1.0f;
+			float maxInt = -100000.0f;
 			float minInt = 100000.0f;
 			float maxFlu = -1000000.0f;
 			float minFlu = 1000000.0f;
@@ -77,6 +81,16 @@ void MapReader::ReadFile()
 			this->_iterations->iteration[iter].minIntensity = minInt;
 			this->_iterations->iteration[iter].maxFlux = maxFlu;
 			this->_iterations->iteration[iter].minFlux = minFlu;
+
+			if (maxInt > this->_iterations->maxIntensity)
+				this->_iterations->maxIntensity = maxInt;
+			if (minInt <= this->_iterations->minIntensity)
+				this->_iterations->minIntensity = minInt;
+
+			if (maxFlu > this->_iterations->maxFlux)
+				this->_iterations->maxFlux = maxFlu;
+			if (minFlu <= this->_iterations->minFlux)
+				this->_iterations->minFlux = minFlu;
 		}
 
 		Normalize();
@@ -87,23 +101,24 @@ void MapReader::ReadFile()
 	}
 }
 
+// Normalize negative values for intensity and flux
 void MapReader::Normalize()
 {
+	float minFluxAbs = (this->_iterations->minFlux < 0 ? abs(this->_iterations->minFlux) : this->_iterations->minFlux*(-1));
+	float minIntensityAbs = (this->_iterations->minIntensity < 0 ? abs(this->_iterations->minIntensity) : this->_iterations->minIntensity*(-1));
 	for (int iter = 0; iter < this->_iterations->IterationNum; iter++)
 	{
-		float minFluxAbs = 0.0f;
-		float minIntensityAbs = 0.0f;
-
+		float minFluxAbsIter = 0.0f;
 		if (this->fluxParam)
 		{
-			minFluxAbs = (this->_iterations->iteration[iter].minFlux < 0 ? abs(this->_iterations->iteration[iter].minFlux) : this->_iterations->iteration[iter].minFlux*(-1));
+			minFluxAbsIter = (this->_iterations->iteration[iter].minFlux < 0 ? abs(this->_iterations->iteration[iter].minFlux) : this->_iterations->iteration[iter].minFlux*(-1));
 			this->_iterations->iteration[iter].minFlux = 0.0f;
-			this->_iterations->iteration[iter].maxFlux += minFluxAbs;
+			this->_iterations->iteration[iter].maxFlux += minFluxAbsIter;
 		}
 
-		minIntensityAbs = (this->_iterations->iteration[iter].minIntensity < 0 ? abs(this->_iterations->iteration[iter].minIntensity) : this->_iterations->iteration[iter].minIntensity*(-1));
+		float minIntensityAbsIter = (this->_iterations->iteration[iter].minIntensity < 0 ? abs(this->_iterations->iteration[iter].minIntensity) : this->_iterations->iteration[iter].minIntensity*(-1));
 		this->_iterations->iteration[iter].minIntensity = 0.0f;
-		this->_iterations->iteration[iter].maxIntensity += minFluxAbs;
+		this->_iterations->iteration[iter].maxIntensity += minIntensityAbsIter;
 
 		for (int index = 0; index < this->_iterations->sizeZ*this->_iterations->sizeY*this->_iterations->sizeX; index++)
 		{
