@@ -719,16 +719,16 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 
 		if (g_ParameterToShow == 0)
 		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
-			minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
+			maxTmp = g_Iterations->maxIntensity;
+			minTmp = g_Iterations->minIntensity;
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;
 		}
 		else if (g_ParameterToShow == 1)
 		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
-			minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
+			maxTmp = g_Iterations->maxFlux;
+			minTmp = g_Iterations->minFlux;
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;

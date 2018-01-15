@@ -126,6 +126,10 @@ void MapReader::Normalize()
 			this->_iterations->iteration[iter].point[index].intensity += minIntensityAbs;
 		}
 	}
+	this->_iterations->maxFlux += minFluxAbs;
+	this->_iterations->minFlux += minFluxAbs;
+	this->_iterations->maxIntensity += minIntensityAbs;
+	this->_iterations->minIntensity += minIntensityAbs;
 }
 
 Iterations* MapReader::GetIterations()
