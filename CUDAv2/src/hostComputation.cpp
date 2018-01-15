@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+
+
 void hostSimulation(StartArgs args, FluidParams* pars,void* spaceData, void* resultData)
 {
 	Fraction* spaceFraction = (Fraction*)spaceData;

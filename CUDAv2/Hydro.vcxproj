@@ -21,16 +21,28 @@
   <ItemGroup>
     <ClInclude Include="src\computation.h" />
     <ClInclude Include="src\customTimer.h" />
+    <ClInclude Include="src\exec.h" />
+    <ClCompile Include="src\exechost.cu">
+      <FileType>CppCode</FileType>
+    </ClCompile>
     <ClInclude Include="src\Fraction.h" />
+    <ClInclude Include="src\octreemanger.h" />
+    <ClInclude Include="src\octree\array.h" />
+    <ClInclude Include="src\octree\array2d.h" />
+    <ClInclude Include="src\octree\numtraits.h" />
+    <ClInclude Include="src\octree\octree.h" />
+    <ClInclude Include="src\octree\point3d.h" />
+    <ClInclude Include="src\octree\shareddata.h" />
+    <ClInclude Include="src\octree\tinyvector.h" />
     <ClInclude Include="src\printer.h" />
-    <ClInclude Include="src\ntree.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\customTimer.cpp" />
+    <ClCompile Include="src\execdevice.cu" />
     <ClCompile Include="src\hostComputation.cpp" />
+    <ClCompile Include="src\octreemanger.cpp" />
     <ClCompile Include="src\printer.cpp" />
-    <ClCompile Include="src\ntree.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +52,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </CudaCompile>
     <CudaCompile Include="src\main.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\octree\octree.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{39A7FA6B-B0A5-4B4A-8F20-70EF9BC7EBB6}</ProjectGuid>
@@ -165,7 +180,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <CudaRuntime>Static</CudaRuntime>
       <NvccCompilation>compile</NvccCompilation>
-      <CodeGeneration>compute_30,sm_30</CodeGeneration>
+      <CodeGeneration>compute_50,sm_50</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

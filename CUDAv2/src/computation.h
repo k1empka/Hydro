@@ -9,8 +9,8 @@
 //#define Z_SIZE 100
 //#define SIZE (X_SIZE * Y_SIZE * Z_SIZE)
 #define NUM_OF_START_FRACTIONS 100
-#define MAX_START_FORCE 100
-#define MAX_START_FLUX 100
+#define MAX_START_FORCE 150
+#define MAX_START_FLUX 150
 #define MAX_VELOCITY 5
 
   
@@ -29,7 +29,8 @@
  *  more info: http://matthias-mueller-fischer.ch/publications/sca03.pdf
  */
 
-enum deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_LAYER,SHARED_3D_LAYER_FOR_IN};
+enum class deviceSimulationType{GLOBAL,SURFACE,SHARED_3D_LAYER,SHARED_3D_LAYER_FOR_IN,NONE};
+enum class hostSimulationType{SPACE,OCTREE,NONE};
 
 struct FluidParams
 {
@@ -44,10 +45,10 @@ struct StartArgs
 	int X_SIZE;
 	int Y_SIZE;
 	int Z_SIZE;
-	bool host;
+	hostSimulationType host;
 	bool print;
 	bool random;
-	enum deviceSimulationType type;
+	deviceSimulationType type;
 	__host__ __device__ int IDX_2D(int x,int y){return ((y) * X_SIZE + x);};
 	__host__ __device__ int IDX_3D(int x,int y,int z) {return((z) * (Y_SIZE * X_SIZE) + y * X_SIZE + x);};
 	__host__ __device__ int SIZE(){ return (X_SIZE * Y_SIZE * Z_SIZE); };

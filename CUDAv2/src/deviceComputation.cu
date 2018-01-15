@@ -92,24 +92,20 @@ __global__ void stepShared3DLayerForIn(StartArgs args, FluidParams* params, Frac
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     __shared__ Fraction shSpace[TH_IN_BLCK_X + 4][TH_IN_BLCK_Y + 4];
-    __syncthreads(); // wait for constructors
-
     Fraction zpp, zp, zc, zn, znn;
 
     if(x<args.X_SIZE && y<args.Y_SIZE)
     {
-#pragma unroll
         for (int z = 2; z < args.Z_SIZE - 2; ++z)
         {
             const int idx = args.IDX_3D(x,y,z);
             fillShMem(args, make_int3(x, y, z), spaceData, shSpace);
-            __syncthreads(); // wait for threads to fill whole shared memory
 
             if (z == 2)
             {
                 zpp = spaceData[args.IDX_3D(x, y, z - 2)];
                 zp = spaceData[args.IDX_3D(x, y, z - 1)];
-                zc = shSpace[threadIdx.x+2][threadIdx.y+2];
+                zc = spaceData[args.IDX_3D(x, y, z - 1)];
                 zn = spaceData[args.IDX_3D(x, y, z + 1)];
             }
             znn = spaceData[args.IDX_3D(x, y, z + 2)];
@@ -117,12 +113,7 @@ __global__ void stepShared3DLayerForIn(StartArgs args, FluidParams* params, Frac
             __syncthreads(); // wait for threads to fill whole shared memory
 
                              // Calculate cell  with data from shared memory (Layer part x,y)
-            resultData[idx] = resultZ(params, zpp,
-                                              zp,
-                                              zc,
-                                              zn, 
-                                              znn, 
-                                              shSpace);
+            resultData[idx] = resultZ(params, zpp,zp,zc,zn,znn,shSpace);
             zpp = zp;
             zp = zc;
             zc = zn;
@@ -231,18 +222,15 @@ void simulation(StartArgs args, FluidParams* pars, void* space,void* result)
 {
     switch(args.type)
     {
-    case GLOBAL:
+    case deviceSimulationType::GLOBAL:
         simulationGlobal(args,pars,(Fraction*)space,(Fraction*)result);
         break;
-    case SHARED_3D_LAYER:
+    case deviceSimulationType::SHARED_3D_LAYER:
         simulationShared3dLayer(args,pars, (Fraction*)space,(Fraction*)result);
         break;
-    case SHARED_3D_LAYER_FOR_IN:
+    case deviceSimulationType::SHARED_3D_LAYER_FOR_IN:
         simulationShared3dLayerForIn(args,pars, (Fraction*)space,(Fraction*)result);
         break;
     }
     cudaCheckErrors("step failed!");
 }
-
-
-

@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <memory>
+
+class Fraction;
+typedef std::shared_ptr<Fraction> FractionPtr;
 
 enum class eDim
 {
