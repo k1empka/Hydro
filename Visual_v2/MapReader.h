@@ -22,6 +22,7 @@ public:
 class Iterations
 {
 public:
+	float minIntensity, maxIntensity, minFlux, maxFlux;
 	unsigned int sizeX, sizeY, sizeZ;
 	unsigned int IterationNum;
 	Iteration *iteration;
