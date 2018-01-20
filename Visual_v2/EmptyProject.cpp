@@ -623,7 +623,7 @@ HRESULT OnCreateBuffers(IDirect3DDevice9* pd3dDevice)
 					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 					g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-					g_vBoxInstance_Color[index].a = 0.0f;
+					g_vBoxInstance_Color[index].a = 1.0f;
 				}
 				index++;
 				//g_vBoxInstance_Color[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX] = D3DCOLOR_ARGB(255, 255, 255, 255);
@@ -719,16 +719,16 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 
 		if (g_ParameterToShow == 0)
 		{
-			maxTmp = g_Iterations->maxIntensity;
-			minTmp = g_Iterations->minIntensity;
+			maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
+			minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;
 		}
 		else if (g_ParameterToShow == 1)
 		{
-			maxTmp = g_Iterations->maxFlux;
-			minTmp = g_Iterations->minFlux;
+			maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
+			minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;
@@ -776,7 +776,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 0.0f;
+							g_vBoxInstance_Color[index].a = 1.0f;
 						}
 					}
 					else if (g_axis == 1)
@@ -795,7 +795,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 0.0f;
+							g_vBoxInstance_Color[index].a = 1.0f;
 						}
 					}
 					else if (g_axis == 2)
@@ -812,7 +812,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 0.0f;
+							g_vBoxInstance_Color[index].a = 1.0f;
 						}
 					}
 					else if (g_axis == 3)
@@ -822,14 +822,14 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 0.8f;
+							g_vBoxInstance_Color[index].a = 1.0f;
 						}
 						else
 						{
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 0.0f;
+							g_vBoxInstance_Color[index].a = 1.0f;
 						}
 					}
 					index++;

@@ -46,6 +46,7 @@ public:
 private:
 	void MapReader::ReadFile();
 	void MapReader::Normalize();
+	void MapReader::NormalizeGlobal();
 	bool MapReader::GetHeader(std::string line);
 	bool MapReader::InterprateLine(std::string line);
 	unsigned int MapReader::split(const std::string &txt, std::vector<std::string> &strs, char ch);

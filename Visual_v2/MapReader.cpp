@@ -59,6 +59,8 @@ void MapReader::ReadFile()
 						}
 						else
 							myfile.read((char*)(&cell), sizeof(size_cell));
+						if (z >= 95)
+							int i = 0;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX)+y*this->_iterations->sizeY + x].x = x;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].y = y;
 						this->_iterations->iteration[iter].point[z*(this->_iterations->sizeY*this->_iterations->sizeX) + y*this->_iterations->sizeY + x].z = z;
@@ -94,6 +96,7 @@ void MapReader::ReadFile()
 		}
 
 		Normalize();
+		//NormalizeGlobal();
 	}
 	else
 	{
@@ -101,8 +104,34 @@ void MapReader::ReadFile()
 	}
 }
 
-// Normalize negative values for intensity and flux
 void MapReader::Normalize()
+{
+	for (int iter = 0; iter < this->_iterations->IterationNum; iter++)
+	{
+		float minFluxAbs = 0.0f;
+		float minIntensityAbs = 0.0f;
+
+		if (this->fluxParam)
+		{
+			minFluxAbs = (this->_iterations->iteration[iter].minFlux < 0 ? abs(this->_iterations->iteration[iter].minFlux) : this->_iterations->iteration[iter].minFlux*(-1));
+			this->_iterations->iteration[iter].minFlux = 0.0f;
+			this->_iterations->iteration[iter].maxFlux += minFluxAbs;
+		}
+
+		minIntensityAbs = (this->_iterations->iteration[iter].minIntensity < 0 ? abs(this->_iterations->iteration[iter].minIntensity) : this->_iterations->iteration[iter].minIntensity*(-1));
+		this->_iterations->iteration[iter].minIntensity = 0.0f;
+		this->_iterations->iteration[iter].maxIntensity += minFluxAbs;
+
+		for (int index = 0; index < this->_iterations->sizeZ*this->_iterations->sizeY*this->_iterations->sizeX; index++)
+		{
+			this->_iterations->iteration[iter].point[index].flux += minFluxAbs;
+			this->_iterations->iteration[iter].point[index].intensity += minIntensityAbs;
+		}
+	}
+}
+
+// Normalize negative values for intensity and flux
+void MapReader::NormalizeGlobal()
 {
 	float minFluxAbs = (this->_iterations->minFlux < 0 ? abs(this->_iterations->minFlux) : this->_iterations->minFlux*(-1));
 	float minIntensityAbs = (this->_iterations->minIntensity < 0 ? abs(this->_iterations->minIntensity) : this->_iterations->minIntensity*(-1));
