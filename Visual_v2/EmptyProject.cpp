@@ -776,7 +776,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 1.0f;
+							g_vBoxInstance_Color[index].a = 0.0f;
 						}
 					}
 					else if (g_axis == 1)
@@ -795,7 +795,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 1.0f;
+							g_vBoxInstance_Color[index].a = 0.0f;
 						}
 					}
 					else if (g_axis == 2)
@@ -812,7 +812,7 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 1.0f;
+							g_vBoxInstance_Color[index].a = 0.0f;
 						}
 					}
 					else if (g_axis == 3)
@@ -822,14 +822,14 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 1.0f;
+							g_vBoxInstance_Color[index].a = 0.8f;
 						}
 						else
 						{
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].x = 100.0f; //iX * 16 / 255.0f; // (i%g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].y = 100.0f; // iY * 16 / 255.0f; // (i / g_sizeX) * 20 / 255.0f;
 							g_vBoxInstance_Position[iZ*(g_sizeX*g_sizeY) + iY * g_sizeY + iX].z = 100.0f; // iZ * 16 / 255.0f; // iY * 20 / 255.0f;
-							g_vBoxInstance_Color[index].a = 1.0f;
+							g_vBoxInstance_Color[index].a = 0.0f;
 						}
 					}
 					index++;
