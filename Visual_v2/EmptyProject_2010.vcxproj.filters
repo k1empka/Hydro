@@ -14,7 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EmptyProject.cpp" />
     <ClCompile Include="DXUT\Core\DXUT.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
@@ -43,6 +42,7 @@
       <Filter>DXUT</Filter>
     </ClCompile>
     <ClCompile Include="MapReader.cpp" />
+    <ClCompile Include="HydroVisual.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXUT\Core\DXUT.h">
