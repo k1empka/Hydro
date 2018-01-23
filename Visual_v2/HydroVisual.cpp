@@ -38,6 +38,7 @@ unsigned int					g_currentIteration = 0;
 unsigned int					g_warstwa = 0;
 unsigned int					g_axis = 3; // 0 - x, 1 - y, 2 - z
 
+bool							g_globalNormalize = false;
 bool							g_toTransform = true;
 bool							g_endedTransform = true;
 bool							g_fluxParam = true;
@@ -206,7 +207,7 @@ INT WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR argv, int )
 
 	char buffer[500];
 	wcstombs(buffer, argv, 500);
-	MapReader* mapReader = new MapReader(buffer, g_fluxParam);
+	MapReader* mapReader = new MapReader(buffer, g_fluxParam, g_globalNormalize);
 	g_Iterations = mapReader->GetIterations();
 
 	g_sizeX = g_Iterations->sizeX;
@@ -719,16 +720,32 @@ void OnRenderShaderInstancing(IDirect3DDevice9* pd3dDevice, double fTime, float 
 
 		if (g_ParameterToShow == 0)
 		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
-			minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
+			if (!g_globalNormalize)
+			{
+				maxTmp = g_Iterations->iteration[g_currentIteration].maxIntensity;
+				minTmp = g_Iterations->iteration[g_currentIteration].minIntensity;
+			}
+			else
+			{
+				maxTmp = g_Iterations->maxIntensity;
+				minTmp = g_Iterations->minIntensity;
+			}
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;
 		}
 		else if (g_ParameterToShow == 1)
 		{
-			maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
-			minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
+			if (!g_globalNormalize)
+			{
+				maxTmp = g_Iterations->iteration[g_currentIteration].maxFlux;
+				minTmp = g_Iterations->iteration[g_currentIteration].minFlux;
+			}
+			else
+			{
+				maxTmp = g_Iterations->maxFlux;
+				minTmp = g_Iterations->minFlux;
+			}
 			tmp = 255.0f / (maxTmp - minTmp);
 			if (maxTmp - minTmp == 0.0f)
 				tmp = 255.0f;

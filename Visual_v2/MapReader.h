@@ -34,12 +34,13 @@ private:
 	Iterations*	_iterations;
 	char *pathC;
 	bool fluxParam;
+	bool globalNormalize;
 
 	int index = 0, local_x = 0, local_y = 0, currentIter = 0;
 	float maxInten = -1.0f, minInten = 10000.0f;
 
 public:
-	MapReader(char *path, bool fluxParam);
+	MapReader(char *path, bool fluxParam, bool gloablNormalize);
 	~MapReader();
 	Iterations* MapReader::GetIterations();
 

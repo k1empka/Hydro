@@ -1,6 +1,6 @@
 #include "MapReader.h"
 
-MapReader::MapReader(char *path, bool fluxParam = false)
+MapReader::MapReader(char *path, bool fluxParam = false, bool gloablNormalize = false)
 {
 	this->_iterations = new Iterations();
 	this->_iterations->maxFlux = -1000000.0f;
@@ -9,6 +9,7 @@ MapReader::MapReader(char *path, bool fluxParam = false)
 	this->_iterations->minIntensity = 1000000.0f;
 	this->pathC = path;
 	this->fluxParam = fluxParam;
+	this->globalNormalize = gloablNormalize;
 
 	ReadFile();
 }
@@ -95,8 +96,10 @@ void MapReader::ReadFile()
 				this->_iterations->minFlux = minFlu;
 		}
 
-		Normalize();
-		//NormalizeGlobal();
+		if(this->globalNormalize)
+			NormalizeGlobal();
+		else
+			Normalize();
 	}
 	else
 	{
