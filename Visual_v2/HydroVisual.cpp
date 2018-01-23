@@ -38,10 +38,10 @@ unsigned int					g_currentIteration = 0;
 unsigned int					g_warstwa = 0;
 unsigned int					g_axis = 3; // 0 - x, 1 - y, 2 - z
 
-bool							g_globalNormalize = false;
+bool							g_globalNormalize = true;
 bool							g_toTransform = true;
 bool							g_endedTransform = true;
-bool							g_fluxParam = true;
+bool							g_fluxParam = false;
 bool							g_firstRender = true;
 bool							startSimulate = false;
 bool                            g_bAppIsDebug = false;

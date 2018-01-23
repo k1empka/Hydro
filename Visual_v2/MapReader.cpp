@@ -140,18 +140,6 @@ void MapReader::NormalizeGlobal()
 	float minIntensityAbs = (this->_iterations->minIntensity < 0 ? abs(this->_iterations->minIntensity) : this->_iterations->minIntensity*(-1));
 	for (int iter = 0; iter < this->_iterations->IterationNum; iter++)
 	{
-		float minFluxAbsIter = 0.0f;
-		if (this->fluxParam)
-		{
-			minFluxAbsIter = (this->_iterations->iteration[iter].minFlux < 0 ? abs(this->_iterations->iteration[iter].minFlux) : this->_iterations->iteration[iter].minFlux*(-1));
-			this->_iterations->iteration[iter].minFlux = 0.0f;
-			this->_iterations->iteration[iter].maxFlux += minFluxAbsIter;
-		}
-
-		float minIntensityAbsIter = (this->_iterations->iteration[iter].minIntensity < 0 ? abs(this->_iterations->iteration[iter].minIntensity) : this->_iterations->iteration[iter].minIntensity*(-1));
-		this->_iterations->iteration[iter].minIntensity = 0.0f;
-		this->_iterations->iteration[iter].maxIntensity += minIntensityAbsIter;
-
 		for (int index = 0; index < this->_iterations->sizeZ*this->_iterations->sizeY*this->_iterations->sizeX; index++)
 		{
 			this->_iterations->iteration[iter].point[index].flux += minFluxAbs;
